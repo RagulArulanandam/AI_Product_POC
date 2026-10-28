@@ -1,23 +1,22 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/auth/signup-form";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata = { title: "Create your account" };
 
 export default function SignupPage() {
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Create your account</CardTitle>
-        <CardDescription>Set up AI automation for your business in minutes.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <SignupForm />
-      </CardContent>
-      <CardFooter className="text-sm text-muted-foreground">
-        Already registered?&nbsp;
-        <Link href="/login" className="underline">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
+        <p className="text-muted-foreground">Set up AI automation for your business in minutes.</p>
+      </div>
+      <SignupForm />
+      <p className="text-sm text-muted-foreground">
+        Already registered?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
           Log in
         </Link>
-      </CardFooter>
-    </Card>
+      </p>
+    </div>
   );
 }

@@ -1,22 +1,23 @@
+import { AuthShell } from "@/components/auth/auth-shell";
 import { OnboardingForm } from "@/components/auth/onboarding-form";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireNoBusiness } from "@/lib/auth/guards";
 import { supportedTimezones } from "@/lib/validation/business";
+
+export const metadata = { title: "Set up your business" };
 
 export default async function OnboardingPage() {
   await requireNoBusiness();
 
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Tell us about your business</CardTitle>
-          <CardDescription>You can change these details later, and set opening hours in settings.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <OnboardingForm timezones={supportedTimezones()} />
-        </CardContent>
-      </Card>
-    </main>
+    <AuthShell>
+      <div className="space-y-8">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-primary">Step 1 of 1</p>
+          <h1 className="text-3xl font-semibold tracking-tight">Tell us about your business</h1>
+          <p className="text-muted-foreground">You can change these later, and set your opening hours in Settings.</p>
+        </div>
+        <OnboardingForm timezones={supportedTimezones()} />
+      </div>
+    </AuthShell>
   );
 }

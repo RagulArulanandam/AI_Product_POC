@@ -1,25 +1,24 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata = { title: "Log in" };
 
 export default async function LoginPage(props: PageProps<"/login">) {
   const { next } = await props.searchParams;
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Log in</CardTitle>
-        <CardDescription>Welcome back.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <LoginForm next={typeof next === "string" ? next : undefined} />
-      </CardContent>
-      <CardFooter className="text-sm text-muted-foreground">
-        New here?&nbsp;
-        <Link href="/signup" className="underline">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">Welcome back</h1>
+        <p className="text-muted-foreground">Log in to see how your automations are doing.</p>
+      </div>
+      <LoginForm next={typeof next === "string" ? next : undefined} />
+      <p className="text-sm text-muted-foreground">
+        New here?{" "}
+        <Link href="/signup" className="font-medium text-primary hover:underline">
           Create an account
         </Link>
-      </CardFooter>
-    </Card>
+      </p>
+    </div>
   );
 }
