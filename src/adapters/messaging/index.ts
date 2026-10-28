@@ -21,6 +21,7 @@ export function getMessaging(): MessagingAdapter {
     authToken: env.TWILIO_AUTH_TOKEN,
     whatsappFrom: env.TWILIO_WHATSAPP_FROM,
     publicBaseUrl: getPublicBaseUrl(),
+    trialContentSid: env.TWILIO_TRIAL_CONTENT_SID,
   });
 }
 

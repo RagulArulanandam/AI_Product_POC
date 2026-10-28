@@ -149,14 +149,23 @@ export async function sendToCustomer(deps: SendDeps, input: SendInput): Promise<
 
   // 7. Send.
   let providerSid: string;
+  let templateSid: string | undefined;
   try {
-    ({ providerSid } = await deps.messaging.sendMessage({ to: input.to, body: input.body }));
+    ({ providerSid, templateSid } = await deps.messaging.sendMessage({ to: input.to, body: input.body }));
   } catch (error) {
     const message = error instanceof Error ? error.message : "send failed";
     await deps.admin.from("messages").update({ status: "failed", error: String(redact(message)) }).eq("id", messageId);
     throw error;
   }
 
+  // In trial template mode the customer received a fixed template, not our text. Say so in the
+  // record instead of showing text that was never sent.
+  if (templateSid) {
+    await deps.admin
+      .from("messages")
+      .update({ body: `[trial template ${templateSid}] ${input.body}` })
+      .eq("id", messageId);
+  }
   await recordSent(deps, input, messageId, providerSid);
   return { status: "sent", messageId, providerSid, duplicate: false };
 }

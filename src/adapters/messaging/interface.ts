@@ -21,8 +21,12 @@ export interface VoiceCall {
 }
 
 export interface MessagingAdapter {
-  /** Sends a free-form WhatsApp message. Throws AdapterError. */
-  sendMessage(input: { to: string; body: string }): Promise<{ providerSid: string }>;
+  /**
+   * Sends a WhatsApp message. Normally free-form text. In trial template mode the adapter sends
+   * a fixed pre-approved template instead (the text cannot be chosen) and reports it in
+   * `templateSid`. Throws AdapterError.
+   */
+  sendMessage(input: { to: string; body: string }): Promise<{ providerSid: string; templateSid?: string }>;
 
   /** Checks the provider signature over the public URL the provider called. */
   validateWebhook(input: { url: string; params: Record<string, string>; signature: string | null }): boolean;

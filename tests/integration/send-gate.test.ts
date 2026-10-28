@@ -122,6 +122,14 @@ describe("sendToCustomer: sending", () => {
     expect(fake.sent).toHaveLength(1);
   });
 
+  it("records, in trial template mode, that a fixed template was sent instead of our text", async () => {
+    fake.templateSid = "HX00000000000000000000000000000001";
+    await sendToCustomer(deps(), input({ body: "Our own wording" }));
+    const [row] = await outboundRows();
+    expect(row.body).toBe("[trial template HX00000000000000000000000000000001] Our own wording");
+    expect(row.status).toBe("sent");
+  });
+
   it("marks replies from the AI as sender ai", async () => {
     await admin.from("conversations").update({ last_inbound_at: NOW.toISOString() }).eq("id", conversationId);
     await sendToCustomer(deps(), input({ kind: "reply", body: "Sure!" }));

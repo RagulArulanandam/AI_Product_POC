@@ -98,6 +98,53 @@ describe("TwilioMessagingAdapter", () => {
   });
 });
 
+describe("TwilioMessagingAdapter trial template mode", () => {
+  const TEMPLATE = "HX00000000000000000000000000000001";
+
+  function templated() {
+    const create = vi.fn(async (args: CreateArgs) => {
+      void args;
+      return { sid: "SMtemplate001" };
+    });
+    const adapter = new TwilioMessagingAdapter(
+      { accountSid: "ACtest", authToken: AUTH_TOKEN, whatsappFrom: "whatsapp:+447460077297", publicBaseUrl: BASE, trialContentSid: TEMPLATE },
+      { messages: { create } },
+    );
+    return { adapter, create };
+  }
+
+  it("sends the template instead of the text, and says so", async () => {
+    const { adapter, create } = templated();
+    const result = await adapter.sendMessage({ to: "+447887153223", body: "Our own wording" });
+    expect(result).toEqual({ providerSid: "SMtemplate001", templateSid: TEMPLATE });
+    expect(create).toHaveBeenCalledWith({
+      from: "whatsapp:+447460077297",
+      to: "whatsapp:+447887153223",
+      contentSid: TEMPLATE,
+      statusCallback: "https://tunnel.example.com/api/webhooks/whatsapp/status",
+    });
+    expect(create.mock.calls[0][0]).not.toHaveProperty("body");
+  });
+
+  it("still sends free text, with no templateSid, when no template is configured", async () => {
+    const create = vi.fn(async (args: CreateArgs) => {
+      void args;
+      return { sid: "SMstub000001" };
+    });
+    const { adapter } = twilioWithStub(create);
+    const result = await adapter.sendMessage({ to: "+447887153223", body: "Plain text" });
+    expect(result).toEqual({ providerSid: "SMstub000001" });
+    expect(create.mock.calls[0][0]).toMatchObject({ body: "Plain text" });
+    expect(create.mock.calls[0][0]).not.toHaveProperty("contentSid");
+  });
+
+  it("still validates recipients and the body in template mode", async () => {
+    const { adapter } = templated();
+    await expect(adapter.sendMessage({ to: "07887153223", body: "x" })).rejects.toMatchObject({ code: "invalid_request" });
+    await expect(adapter.sendMessage({ to: "+447887153223", body: " " })).rejects.toMatchObject({ code: "invalid_request" });
+  });
+});
+
 describe("Twilio signature validation", () => {
   const { adapter } = twilioWithStub();
   const url = "https://tunnel.example.com/api/webhooks/voice";
