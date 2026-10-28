@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 5 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 6 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -43,8 +43,8 @@ Done when: natural chat works; complaints and "speak to someone" escalate. (Done
 Before relying on the AI live: add billing credit at platform.openai.com/settings/organization/billing, then run the README "Try the AI conversation" steps.
 
 ## Phase 5: Customer dashboard
-- [ ] Onboarding, product cards + toggles, Product 1 config form
-- [ ] Integrations page, conversation list/detail, activity metrics, billing status page
+- [x] Onboarding, product cards + toggles, Product 1 config form
+- [x] Integrations page, conversation list/detail, activity metrics, billing status page
 Done when: owner can configure and watch Product 1 without touching the DB.
 
 ## Phase 6: Calendar booking

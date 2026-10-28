@@ -9,7 +9,8 @@ Phase 1 (platform core) is done: sign up, onboarding, route protection, tenant i
 Phase 2 (automation engine) is done: queue, runner with retries, worker endpoint, pg_cron and an idempotent webhook helper. It has no customer-facing behaviour yet; it is exercised by tests.
 Phase 3 (Product 1 outbound) is done: a missed call (real webhook or simulated) opens a conversation and sends the first WhatsApp message after the configured delay. On a Twilio trial account the message is Twilio's fixed template, not our text (see docs/design/integrations.md).
 Phase 4 (AI conversation) is done: customer replies are answered by the model within strict rules, and complaints, requests for a person, urgent or health questions and unusable answers hand the conversation to a person and email the owner. STOP opts the customer out. Verified with scripted models and fake WhatsApp; live OpenAI needs billing credit, and live WhatsApp replies need a Twilio account that can send free text.
-Phases 5 to 8 (dashboard, calendar, admin, hardening) are not built yet.
+Phase 5 (customer dashboard) is done: onboarding, dashboard with metrics and set-up checklist, product cards and the Product 1 form, settings, billing status, integrations with call-forwarding steps, and conversation list and detail. `npm run db:seed` adds demo conversations for Bright Smile Dental (owner-a@poc.local) so the pages have something to show. To check a production build without disturbing `npm run dev`, build into its own folder: `NEXT_DIST_DIR=.next-build npx next build`, then `NEXT_DIST_DIR=.next-build npx next start -p 3102`.
+Phases 6 to 8 (calendar, admin, hardening) are not built yet.
 
 ## Prerequisites
 - Node.js 24 and npm
