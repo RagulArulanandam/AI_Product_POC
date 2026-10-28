@@ -42,6 +42,8 @@ async function main(): Promise<void> {
     const target = toDockerHostUrl(workerUrl);
     await upsertVaultSecret(client, "worker_url", target, "URL of the Next.js worker endpoint");
     await upsertVaultSecret(client, "worker_secret", secret, "Bearer token for the worker endpoint");
+    // DB tests pause the job; make sure it is running again.
+    await client.query("select cron.alter_job(jobid, active := true) from cron.job where jobname = 'worker-tick'");
     console.log(`Cron configured: worker-tick calls ${target} every minute (secret not shown).`);
   } finally {
     await client.end();

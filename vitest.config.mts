@@ -30,6 +30,7 @@ export default defineConfig({
           environment: "node",
           include: ["tests/db/**/*.test.ts", "tests/integration/**/*.test.ts"],
           setupFiles: ["tests/helpers/load-env.ts"],
+          globalSetup: ["tests/helpers/cron-pause.ts"],
           fileParallelism: false,
           testTimeout: 30_000,
           hookTimeout: 60_000,

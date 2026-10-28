@@ -16,9 +16,10 @@ afterAll(async () => {
 });
 
 describe("worker cron job", () => {
+  // The job is paused while DB tests run (tests/helpers/cron-pause.ts), so `active` is not checked here.
   it("is scheduled every minute", async () => {
-    const { rows } = await pg.query("select schedule, command, active from cron.job where jobname = 'worker-tick'");
-    expect(rows).toEqual([{ schedule: "* * * * *", command: "select public.call_worker()", active: true }]);
+    const { rows } = await pg.query("select schedule, command from cron.job where jobname = 'worker-tick'");
+    expect(rows).toEqual([{ schedule: "* * * * *", command: "select public.call_worker()" }]);
   });
 
   it("keeps the URL and secret out of the migration and the job definition", async () => {
