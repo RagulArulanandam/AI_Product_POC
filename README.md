@@ -59,8 +59,12 @@ Needs a funded OpenAI key (`OPENAI_API_KEY`, `OPENAI_MODEL`) and a Resend key (`
 
 ```bash
 # 1. start a conversation, then 2. speak as the customer
-curl -X POST http://localhost:3000/api/dev/simulate-missed-call \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"businessId":"<business uuid>","from":"+44..."}'
-curl -X POST http://localhost:3000/api/dev/simulate-inbound-message \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"from":"+44...","body":"What time do you open on Saturday?"}'
+curl -X POST http://localhost:3000/api/dev/simulate-missed-call \
+  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \
+  -d '{"businessId":"<business uuid>","from":"+44..."}'
+curl -X POST http://localhost:3000/api/dev/simulate-inbound-message \
+  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \
+  -d '{"from":"+44...","body":"What time do you open on Saturday?"}'
 ```
 
 Read the conversation in the `messages` table (Supabase Studio, http://127.0.0.1:54323). Try "I want to make a complaint" or "Is this safe for my condition?" to see an escalation and the owner's email.
