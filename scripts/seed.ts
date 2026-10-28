@@ -120,6 +120,15 @@ export async function runSeed(): Promise<SeedResult> {
     .upsert({ business_id: a.id, product_id: product.id, enabled: true }, { onConflict: "business_id,product_id" });
   if (enableError) throw new Error(`enable product failed: ${enableError.message}`);
 
+  // Map the Twilio voice number to business A so webhooks for it resolve to a business.
+  const voiceNumber = process.env.TWILIO_VOICE_NUMBER;
+  if (voiceNumber && /^\+[1-9]\d{6,14}$/.test(voiceNumber)) {
+    const { error: numberError } = await admin
+      .from("phone_numbers")
+      .upsert({ business_id: a.id, e164: voiceNumber }, { onConflict: "e164" });
+    if (numberError) throw new Error(`phone number mapping failed: ${numberError.message}`);
+  }
+
   // One staff member in business A.
   const staffUserId = await ensureUser(admin, SEED.staff.email);
   const { error: staffError } = await admin

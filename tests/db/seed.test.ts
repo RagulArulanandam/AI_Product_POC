@@ -54,6 +54,13 @@ describe("seed script", () => {
     expect(data).toEqual([{ business_id: a.id, enabled: true }]);
   });
 
+  it("maps the Twilio voice number to business A when one is configured", async () => {
+    const voiceNumber = process.env.TWILIO_VOICE_NUMBER;
+    if (!voiceNumber) return; // nothing to map on a machine without Twilio settings
+    const { data } = await admin.from("phone_numbers").select("business_id").eq("e164", voiceNumber).single();
+    expect(data?.business_id).toBe(first.businesses[0].id);
+  });
+
   it("puts a staff member in business A", async () => {
     const { data } = await admin
       .from("memberships")

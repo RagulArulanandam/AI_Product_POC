@@ -75,3 +75,8 @@ export function getTwilioEnv() {
     TWILIO_VOICE_NUMBER: process.env.TWILIO_VOICE_NUMBER,
   });
 }
+
+/** Dev-only endpoints (such as simulate-missed-call) need the flag and a non-production build. */
+export function getDevEndpointsEnabled(): boolean {
+  return process.env.ENABLE_DEV_ENDPOINTS === "true" && process.env.NODE_ENV !== "production";
+}
