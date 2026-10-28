@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 6 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 7 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -48,9 +48,10 @@ Before relying on the AI live: add billing credit at platform.openai.com/setting
 Done when: owner can configure and watch Product 1 without touching the DB.
 
 ## Phase 6: Calendar booking
-- [ ] Google OAuth connect/disconnect, encrypted token storage, narrow scopes
-- [ ] Calendar adapter: free/busy, slot computation, re-check, create event
-- [ ] Booking states and confirmation message
+- [x] Google OAuth connect/disconnect, encrypted token storage, narrow scopes
+- [x] Calendar adapter: free/busy, slot computation, re-check, create event
+- [x] Booking states and confirmation message
+- [ ] Live check against a real Google account (needs GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI; everything else is verified with the fake calendar and a stubbed Google)
 Done when: call -> chat -> event on the calendar, end to end.
 
 ## Phase 7: Admin panel

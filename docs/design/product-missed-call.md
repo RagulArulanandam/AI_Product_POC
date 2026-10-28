@@ -59,10 +59,13 @@ Code decides: the model only proposes `next_action`. Slots are always computed b
 - Only use facts from the business blurb and config; otherwise say the team will follow up.
 
 ## Booking
-1. Query free/busy for the next N days (default 7).
-2. Compute slots in code from business hours, duration, buffer; offer 2-3.
-3. On confirmation, re-check the slot is still free, create the event, store its ID, send confirmation.
-4. If the slot was taken, offer new slots. If the calendar is disconnected or errors, escalate.
+Built in Phase 6 (`handlers/booking.ts`, `slots.ts`). It runs when booking is on and a Google Calendar integration exists that is not disconnected; otherwise the details-only holding reply is used.
+1. Query free/busy for the next 14 days.
+2. Compute slots in code from business hours (business timezone, daylight saving aware), duration and buffer; offer 3 spread across the preferred day or the next days. Times start at least 60 minutes ahead on a 30-minute grid.
+3. Offered times are saved on the conversation (`offering_slots`). The model sees them and returns `chosen_slot` (1-based); code checks the number was really offered.
+4. On a pick, re-check free/busy and other bookings in the database, claim the time (deterministic event id saved first), create the event, save the booking on the conversation, send a fixed confirmation. A retry after a partial attempt resumes without double booking.
+5. If the time was taken meanwhile, offer other times. No free time at all escalates (`no_availability`). A refused or broken calendar, or the last failed attempt, escalates (`calendar_error`); temporary Google failures are retried by the engine.
+Known limit: two customers choosing the same time at the same instant could both pass the free check; the database check on booked conversations narrows this but is not a lock.
 
 ## Escalation
 Set `conversation.escalated = true` with reason, email the owner via Resend (summary, customer number, link to conversation), log the event. Do not keep auto-replying after escalation except a short "the team will contact you" message.
