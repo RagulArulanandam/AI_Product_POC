@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 4, blocked on the WhatsApp free-text decision (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 5 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -35,11 +35,12 @@ Done when: a missed call produces a WhatsApp message on a real phone after the d
 Open decision before Phase 4: the AI conversation needs free-text replies, which the trial's template-only environment does not allow. Options: the legacy sandbox, or a paid upgrade with a registered sender.
 
 ## Phase 4: Product 1, AI conversation
-- [ ] LLM adapter (OpenAI), structured output, schema validation, bad-JSON fallback
-- [ ] Inbound WhatsApp webhook, idempotent message storage
-- [ ] Intent handling, guardrails, turn cap, STOP handling
-- [ ] Escalation: flag + Resend email to owner
-Done when: natural chat works; complaints and "speak to someone" escalate.
+- [x] LLM adapter (OpenAI), structured output, schema validation, bad-JSON fallback
+- [x] Inbound WhatsApp webhook, idempotent message storage
+- [x] Intent handling, guardrails, turn cap, STOP handling
+- [x] Escalation: flag + Resend email to owner
+Done when: natural chat works; complaints and "speak to someone" escalate. (Done against the scripted model and fake WhatsApp: all Product 1 scenarios 1 to 10 except 4 and 10, which need the calendar, are covered by tests. Live on 28 Oct 2026: the real Resend email reached the owner's inbox via an escalation. NOT yet verified live: a real OpenAI answer, because the OpenAI account reported "no credits remaining"; and real WhatsApp replies, which the Twilio trial cannot send as free text.)
+Before relying on the AI live: add billing credit at platform.openai.com/settings/organization/billing, then run the README "Try the AI conversation" steps.
 
 ## Phase 5: Customer dashboard
 - [ ] Onboarding, product cards + toggles, Product 1 config form

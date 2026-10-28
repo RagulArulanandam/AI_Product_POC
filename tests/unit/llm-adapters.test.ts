@@ -125,6 +125,22 @@ describe("mapOpenAiError", () => {
     expect(error.retryable).toBe(retryable);
   });
 
+  it.each([
+    ["the exact message OpenAI sent when the account had no credit", { status: 429, message: "429 You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/." }],
+    ["a quota type", { status: 429, type: "insufficient_quota", message: "x" }],
+    ["a quota message", { status: 429, message: "You exceeded your current quota, please check your plan and billing details." }],
+  ])("treats %s as permanent, not as a rate limit to wait out", (_label, input) => {
+    const error = mapOpenAiError(Object.assign(new Error(input.message), input));
+    expect(error).toMatchObject({ code: "auth", retryable: false });
+  });
+
+  it("still treats an ordinary 429 as a retryable rate limit", () => {
+    expect(mapOpenAiError(Object.assign(new Error("Rate limit reached for requests"), { status: 429 }))).toMatchObject({
+      code: "rate_limited",
+      retryable: true,
+    });
+  });
+
   it("copes with odd values and keeps the cause", () => {
     expect(mapOpenAiError(undefined).code).toBe("provider_unavailable");
     const cause = new Error("x");

@@ -37,10 +37,15 @@ export interface OpenAiLikeClient {
 
 /** Maps OpenAI failures to AdapterError. No prompt text is ever put in a message. */
 export function mapOpenAiError(error: unknown): AdapterError {
-  const e = (error ?? {}) as { status?: number; code?: string; message?: string };
+  const e = (error ?? {}) as { status?: number; code?: string | null; type?: string | null; message?: string };
   const message = e.message ?? "OpenAI request failed";
 
-  if (e.code === "insufficient_quota") {
+  // A 429 that is really "no credit left" never clears by waiting, unlike a rate limit.
+  const outOfCredit =
+    e.code === "insufficient_quota" ||
+    e.type === "insufficient_quota" ||
+    /no credits remaining|insufficient[_ ]quota|exceeded your current quota|billing/i.test(message);
+  if (outOfCredit) {
     return new AdapterError("auth", "OpenAI quota exhausted or billing not set up", { cause: error });
   }
   if (e.status === 401 || e.status === 403) return new AdapterError("auth", message, { cause: error });

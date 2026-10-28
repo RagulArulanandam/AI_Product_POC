@@ -8,7 +8,8 @@ Scope and decisions: [docs/spec.md](docs/spec.md). Build order: [docs/plan.md](d
 Phase 1 (platform core) is done: sign up, onboarding, route protection, tenant isolation with RLS, product registry and seed data.
 Phase 2 (automation engine) is done: queue, runner with retries, worker endpoint, pg_cron and an idempotent webhook helper. It has no customer-facing behaviour yet; it is exercised by tests.
 Phase 3 (Product 1 outbound) is done: a missed call (real webhook or simulated) opens a conversation and sends the first WhatsApp message after the configured delay. On a Twilio trial account the message is Twilio's fixed template, not our text (see docs/design/integrations.md).
-Phases 4 to 8 (AI conversation, dashboard, calendar, admin, hardening) are not built yet.
+Phase 4 (AI conversation) is done: customer replies are answered by the model within strict rules, and complaints, requests for a person, urgent or health questions and unusable answers hand the conversation to a person and email the owner. STOP opts the customer out. Verified with scripted models and fake WhatsApp; live OpenAI needs billing credit, and live WhatsApp replies need a Twilio account that can send free text.
+Phases 5 to 8 (dashboard, calendar, admin, hardening) are not built yet.
 
 ## Prerequisites
 - Node.js 24 and npm
@@ -52,6 +53,17 @@ curl -X POST http://localhost:3000/api/dev/simulate-missed-call \
 ```
 
 The message is sent after the delay in the product config (default 2 minutes) by the cron job. Watch `automation_logs`, `conversations` and `messages` in Supabase Studio (http://127.0.0.1:54323).
+
+## Try the AI conversation
+Needs a funded OpenAI key (`OPENAI_API_KEY`, `OPENAI_MODEL`) and a Resend key (`RESEND_API_KEY`, `RESEND_FROM_EMAIL`). Until you have a Twilio account that can send free text, set `MESSAGING_ADAPTER=fake` in `.env.local` so replies are stored in the database instead of sent; `LLM_ADAPTER`, `EMAIL_ADAPTER` and `CALENDAR_ADAPTER` work the same way. Set the product's `escalation_email` to your Resend account email (the free sender can only email its owner).
+
+```bash
+# 1. start a conversation, then 2. speak as the customer
+curl -X POST http://localhost:3000/api/dev/simulate-missed-call \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"businessId":"<business uuid>","from":"+44..."}'
+curl -X POST http://localhost:3000/api/dev/simulate-inbound-message \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"from":"+44...","body":"What time do you open on Saturday?"}'
+```
+
+Read the conversation in the `messages` table (Supabase Studio, http://127.0.0.1:54323). Try "I want to make a complaint" or "Is this safe for my condition?" to see an escalation and the owner's email.
 
 ## Layout
 ```
