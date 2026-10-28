@@ -16,10 +16,18 @@ POC principle: build the smallest reliable version that proves the business mode
 - Stripe is NOT in the POC. Subscription status is a manual table.
 
 ## Commands
-(Fill in once scaffolded)
-- `npm run dev` start app
-- `supabase start` / `supabase db reset` local DB + migrations + seed
-- `npm run lint`, `npm run typecheck`, `npm test`
+Docker Desktop must be running for anything that touches the database.
+- `npm run dev` start the app on http://localhost:3000
+- `npm run db:start` start local Supabase (`supabase stop` to stop it)
+- `npm run db:reset` re-apply all migrations from scratch, then `npm run db:seed` for demo data
+- `npm run db:types` regenerate `src/lib/database.types.ts` after any migration (commit it)
+- `npm run lint`, `npm run typecheck`
+- `npm test` runs everything; `npm run test:unit` needs no database, `npm run test:db` needs local Supabase
+- `npm run check:secrets` repo scan for keys, `npm run check:types` fails if the DB types are stale
+- `npm run verify` lint + typecheck + tests + both checks: run before every commit
+- Local secrets live in `.env.local` (gitignored). Names are listed in `.env.example`.
+- Next.js 16 renamed `middleware.ts` to `proxy.ts`. Docs for this version are in `node_modules/next/dist/docs/`.
+- Local seed accounts (password `Password123!`): admin@poc.local, owner-a/b/c@poc.local, staff-a@poc.local
 
 ## Architecture rules
 - One Next.js app, one Supabase database. No microservices, Redis, Kafka, Kubernetes.

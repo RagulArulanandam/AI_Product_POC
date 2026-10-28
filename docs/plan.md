@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 0.
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 2 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -10,13 +10,13 @@ Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 
 Done when: docs reviewed, keys in place, nothing blocked.
 
 ## Phase 1: Platform core
-- [ ] Scaffold Next.js + TS + Tailwind + shadcn, lint/typecheck/test wired
-- [ ] Local Supabase, migrations: businesses, memberships, products, business_products, subscriptions, integrations
-- [ ] RLS policies + cross-tenant isolation test
-- [ ] Auth: signup/login, business creation, membership, route protection
-- [ ] Product registry (manifest) with Product 1 + two "coming soon" stubs
-- [ ] Seed script (2-3 businesses)
-Done when: two test businesses cannot see each other's data; products listed from the registry.
+- [x] Scaffold Next.js + TS + Tailwind + shadcn, lint/typecheck/test wired
+- [x] Local Supabase, migrations: businesses, memberships, platform_admins, products, business_products, subscriptions, integrations, integration_secrets
+- [x] RLS policies + cross-tenant isolation test
+- [x] Auth: signup/login, business creation, membership, route protection
+- [x] Product registry (manifest) with Product 1 + two "coming soon" stubs
+- [x] Seed script (3 businesses, 1 admin, 1 staff)
+Done when: two test businesses cannot see each other's data; products listed from the registry. (Done: see tests/db/isolation.test.ts and tests/db/seed.test.ts.)
 
 ## Phase 2: Automation engine
 - [ ] Tables: customers, conversations, messages, scheduled_actions, automation_logs
