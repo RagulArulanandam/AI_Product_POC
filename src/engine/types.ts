@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import type { EmailAdapter } from "@/adapters/email/interface";
+import type { LlmAdapter } from "@/adapters/llm/interface";
 import type { MessagingAdapter } from "@/adapters/messaging/interface";
 import type { StepLogger } from "./log";
 
@@ -43,6 +45,8 @@ export type ProductHandlers = Record<string, ProductHandler>;
  */
 export interface Services {
   messaging?: () => MessagingAdapter;
+  llm?: () => LlmAdapter;
+  email?: () => EmailAdapter;
 }
 
 export const HANDLE_EVENT = "handle_event";

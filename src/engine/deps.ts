@@ -1,3 +1,5 @@
+import { getEmail } from "@/adapters/email";
+import { getLlm } from "@/adapters/llm";
 import { getMessaging } from "@/adapters/messaging";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listProducts } from "@/products/registry";
@@ -9,6 +11,6 @@ export function createEngineDeps(): EngineDeps {
     admin: createAdminClient(),
     products: listProducts(),
     now: () => new Date(),
-    services: { messaging: getMessaging },
+    services: { messaging: getMessaging, llm: getLlm, email: getEmail },
   };
 }

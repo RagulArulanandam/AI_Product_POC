@@ -125,3 +125,8 @@ export function getTwilioEnv() {
 export function getDevEndpointsEnabled(): boolean {
   return process.env.ENABLE_DEV_ENDPOINTS === "true" && process.env.NODE_ENV !== "production";
 }
+
+/** Where the dashboard lives, for links in emails. */
+export function getAppBaseUrl(): string {
+  return z.string().url().default("http://localhost:3000").parse(process.env.APP_BASE_URL || undefined);
+}

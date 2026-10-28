@@ -1,3 +1,5 @@
+import type { EmailAdapter } from "@/adapters/email/interface";
+import type { LlmAdapter } from "@/adapters/llm/interface";
 import type { MessagingAdapter } from "@/adapters/messaging/interface";
 import type { HandlerContext } from "@/engine/types";
 import { AppError } from "@/lib/errors";
@@ -22,6 +24,16 @@ export function configOf(ctx: HandlerContext): MissedCallConfig {
 export function requireMessaging(ctx: HandlerContext): MessagingAdapter {
   if (!ctx.services.messaging) throw new AppError("messaging_unavailable", "No messaging adapter is configured", 500);
   return ctx.services.messaging();
+}
+
+export function requireLlm(ctx: HandlerContext): LlmAdapter {
+  if (!ctx.services.llm) throw new AppError("llm_unavailable", "No language model adapter is configured", 500);
+  return ctx.services.llm();
+}
+
+export function requireEmail(ctx: HandlerContext): EmailAdapter {
+  if (!ctx.services.email) throw new AppError("email_unavailable", "No email adapter is configured", 500);
+  return ctx.services.email();
 }
 
 /** Whether the business is open now, using the product's own hours or else the business profile's. */
