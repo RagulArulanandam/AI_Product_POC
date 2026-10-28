@@ -13,7 +13,7 @@ export function getFakeMessaging(): FakeMessagingAdapter {
 
 /** The messaging adapter for this process: the fake in tests and `ADAPTER_MODE=fake`, else Twilio. */
 export function getMessaging(): MessagingAdapter {
-  if (process.env.NODE_ENV === "test" || getAdapterMode() === "fake") return getFakeMessaging();
+  if (process.env.NODE_ENV === "test" || getAdapterMode("messaging") === "fake") return getFakeMessaging();
 
   const env = getTwilioEnv();
   return new TwilioMessagingAdapter({

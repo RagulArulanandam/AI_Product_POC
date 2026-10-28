@@ -54,9 +54,48 @@ export function getPublicBaseUrl(): string {
     .PUBLIC_BASE_URL;
 }
 
-/** `fake` makes adapters return in-memory fakes (no vendor calls). Tests always use fakes. */
-export function getAdapterMode(): "real" | "fake" {
-  return z.enum(["real", "fake"]).default("real").parse(process.env.ADAPTER_MODE || undefined);
+export type AdapterKind = "messaging" | "llm" | "email" | "calendar";
+
+/**
+ * `fake` makes an adapter return an in-memory fake (no vendor calls). `ADAPTER_MODE` sets the
+ * default for all adapters; MESSAGING_ADAPTER, LLM_ADAPTER, EMAIL_ADAPTER and CALENDAR_ADAPTER
+ * override it for one (for example real OpenAI with fake WhatsApp). Tests always use fakes.
+ */
+export function getAdapterMode(kind?: AdapterKind): "real" | "fake" {
+  const overrides: Record<AdapterKind, string | undefined> = {
+    messaging: process.env.MESSAGING_ADAPTER,
+    llm: process.env.LLM_ADAPTER,
+    email: process.env.EMAIL_ADAPTER,
+    calendar: process.env.CALENDAR_ADAPTER,
+  };
+  const raw = (kind ? overrides[kind] : undefined) || process.env.ADAPTER_MODE || undefined;
+  return z.enum(["real", "fake"]).default("real").parse(raw);
+}
+
+const openAiSchema = z.object({
+  OPENAI_API_KEY: z.string().min(20, "OPENAI_API_KEY looks wrong"),
+  /** Never hard-coded: the model is chosen here. */
+  OPENAI_MODEL: z.string().min(1, "OPENAI_MODEL must be set"),
+});
+
+export function getOpenAiEnv() {
+  return openAiSchema.parse({
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_MODEL: process.env.OPENAI_MODEL,
+  });
+}
+
+const resendSchema = z.object({
+  RESEND_API_KEY: z.string().regex(/^re_/, "RESEND_API_KEY should start with re_"),
+  /** `onboarding@resend.dev` until a domain is verified (it can only email the account owner). */
+  RESEND_FROM_EMAIL: z.string().min(3, "RESEND_FROM_EMAIL must be set"),
+});
+
+export function getResendEnv() {
+  return resendSchema.parse({
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+  });
 }
 
 const twilioSchema = z.object({
