@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import type { CalendarAdapter } from "@/adapters/calendar/interface";
 import type { EmailAdapter } from "@/adapters/email/interface";
 import type { LlmAdapter } from "@/adapters/llm/interface";
 import type { MessagingAdapter } from "@/adapters/messaging/interface";
@@ -47,6 +48,8 @@ export interface Services {
   messaging?: () => MessagingAdapter;
   llm?: () => LlmAdapter;
   email?: () => EmailAdapter;
+  /** The calendar of one connected integration. */
+  calendar?: (integrationId: string) => CalendarAdapter;
 }
 
 export const HANDLE_EVENT = "handle_event";

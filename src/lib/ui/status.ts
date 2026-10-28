@@ -56,6 +56,7 @@ const REASONS: Record<string, string> = {
   ai_unavailable: "Assistant unavailable",
   model_requested: "Assistant asked for a person",
   calendar_error: "Calendar problem",
+  no_availability: "No free times",
 };
 
 export function escalationReason(reason: string | null | undefined): string {

@@ -125,7 +125,7 @@ describe("POST /api/dev/simulate-inbound-message: behaviour", () => {
       services: { messaging: () => fakeMessaging, llm: () => fakeLlm, email: () => fakeEmail },
     };
     fakeLlm.enqueue({
-      intent: "enquiry", confidence: 0.9, next_action: "ask_question", reply: "We open at nine.",
+      intent: "enquiry", confidence: 0.9, next_action: "ask_question", chosen_slot: null, reply: "We open at nine.",
       extracted: { name: null, service: null, preferred_date: null, preferred_time: null },
     });
     await call({ from: PHONE, body: "What time do you open?" });

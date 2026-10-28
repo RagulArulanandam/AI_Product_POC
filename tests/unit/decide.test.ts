@@ -13,6 +13,7 @@ const ai = (overrides: Partial<AiReply> = {}): AiReply => ({
   confidence: 0.9,
   extracted: { name: null, service: null, preferred_date: null, preferred_time: null },
   next_action: "ask_question",
+  chosen_slot: null,
   reply: "We open at nine.",
   ...overrides,
 });
@@ -155,5 +156,29 @@ describe("sanitizeReply and reply text", () => {
   it("falls back to a safe line when the model's reply is empty or only junk", () => {
     expect(run({ ai: ai({ reply: "" }) })).toEqual({ kind: "reply", reply: FALLBACK_REPLY, state: "in_conversation" });
     expect(run({ ai: ai({ reply: " \u0000 \n " }) })).toEqual({ kind: "reply", reply: FALLBACK_REPLY, state: "in_conversation" });
+  });
+});
+
+describe("decide: booking with a connected calendar", () => {
+  const withCalendar = (answer: AiReply) => run({ ai: answer, calendarBooking: true });
+
+  it.each([
+    ["a booking intent", ai({ intent: "book_appointment", reply: "Thursday 3pm is confirmed!" })],
+    ["offering slots", ai({ next_action: "offer_slots" })],
+    ["confirming a booking", ai({ next_action: "confirm_booking", chosen_slot: 2 })],
+    ["a chosen slot on its own", ai({ chosen_slot: 1 })],
+  ])("hands %s to the booking step, never using the model's text", (_label, answer) => {
+    expect(withCalendar(answer)).toEqual({ kind: "booking" });
+  });
+
+  it("still answers ordinary questions itself", () => {
+    expect(withCalendar(ai())).toEqual({ kind: "reply", reply: "We open at nine.", state: "in_conversation" });
+  });
+
+  it("escalates before booking when the safeguards say so", () => {
+    expect(run({ ai: ai({ intent: "complaint", next_action: "escalate" }), calendarBooking: true })).toEqual({ kind: "escalate", reason: "complaint" });
+    expect(run({ ai: ai({ intent: "book_appointment", confidence: 0.2 }), calendarBooking: true })).toEqual({ kind: "escalate", reason: "low_confidence" });
+    expect(run({ ai: ai({ intent: "book_appointment" }), safety: { ...NONE, urgent: true }, calendarBooking: true })).toEqual({ kind: "escalate", reason: "urgent" });
+    expect(run({ ai: ai({ intent: "book_appointment" }), turnCount: TURN_CAP, calendarBooking: true })).toEqual({ kind: "escalate", reason: "turn_cap" });
   });
 });

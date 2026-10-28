@@ -1,3 +1,4 @@
+import { getCalendar } from "@/adapters/calendar";
 import { getEmail } from "@/adapters/email";
 import { getLlm } from "@/adapters/llm";
 import { getMessaging } from "@/adapters/messaging";
@@ -7,10 +8,11 @@ import type { EngineDeps } from "./runner";
 
 /** The real dependencies the worker route uses. Tests pass their own EngineDeps instead. */
 export function createEngineDeps(): EngineDeps {
+  const admin = createAdminClient();
   return {
-    admin: createAdminClient(),
+    admin,
     products: listProducts(),
     now: () => new Date(),
-    services: { messaging: getMessaging, llm: getLlm, email: getEmail },
+    services: { messaging: getMessaging, llm: getLlm, email: getEmail, calendar: (integrationId) => getCalendar(admin, integrationId) },
   };
 }

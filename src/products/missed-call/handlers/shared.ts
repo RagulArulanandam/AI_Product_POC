@@ -1,3 +1,4 @@
+import type { CalendarAdapter } from "@/adapters/calendar/interface";
 import type { EmailAdapter } from "@/adapters/email/interface";
 import type { LlmAdapter } from "@/adapters/llm/interface";
 import type { MessagingAdapter } from "@/adapters/messaging/interface";
@@ -29,6 +30,11 @@ export function requireMessaging(ctx: HandlerContext): MessagingAdapter {
 export function requireLlm(ctx: HandlerContext): LlmAdapter {
   if (!ctx.services.llm) throw new AppError("llm_unavailable", "No language model adapter is configured", 500);
   return ctx.services.llm();
+}
+
+export function requireCalendar(ctx: HandlerContext, integrationId: string): CalendarAdapter {
+  if (!ctx.services.calendar) throw new AppError("calendar_unavailable", "No calendar adapter is configured", 500);
+  return ctx.services.calendar(integrationId);
 }
 
 export function requireEmail(ctx: HandlerContext): EmailAdapter {

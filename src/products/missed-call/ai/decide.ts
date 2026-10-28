@@ -21,11 +21,15 @@ export interface DecisionInput {
   escalateOn: EscalateOn;
   /** Customer messages so far, including this one. */
   turnCount: number;
+  /** True when a connected calendar can offer and book real times. */
+  calendarBooking?: boolean;
 }
 
 export type Decision =
   | { kind: "escalate"; reason: EscalationReason }
   | { kind: "opt_out" }
+  /** The customer wants to book and a calendar is connected: handled by the booking step, never by the model's text. */
+  | { kind: "booking" }
   | { kind: "reply"; reply: string; state: "in_conversation" | "enquiry_logged" };
 
 /** Strips control characters, collapses whitespace runs and enforces the length limit. */
@@ -39,7 +43,7 @@ export function sanitizeReply(text: string): string {
 }
 
 export function decide(input: DecisionInput): Decision {
-  const { ai, safety, escalateOn, turnCount } = input;
+  const { ai, safety, escalateOn, turnCount, calendarBooking } = input;
 
   // Always escalated, and cannot be switched off.
   if (safety.urgent) return { kind: "escalate", reason: "urgent" };
@@ -63,11 +67,12 @@ export function decide(input: DecisionInput): Decision {
     return { kind: "escalate", reason: "low_confidence" };
   }
 
-  // Booking is not available until calendar booking exists: take the details, tell the customer
-  // the team will confirm, and log the enquiry. The model's own text is not used because it may
-  // promise a slot.
-  if (ai.intent === "book_appointment" || ai.next_action === "offer_slots" || ai.next_action === "confirm_booking") {
-    return { kind: "reply", reply: BOOKING_PENDING_REPLY, state: "enquiry_logged" };
+  // The model's own text is not used for bookings because it may promise a slot. With a calendar
+  // the booking step offers real times; without one we take the details and the team confirms.
+  const bookingRequest =
+    ai.intent === "book_appointment" || ai.next_action === "offer_slots" || ai.next_action === "confirm_booking" || ai.chosen_slot !== null;
+  if (bookingRequest) {
+    return calendarBooking ? { kind: "booking" } : { kind: "reply", reply: BOOKING_PENDING_REPLY, state: "enquiry_logged" };
   }
 
   const reply = sanitizeReply(ai.reply) || FALLBACK_REPLY;

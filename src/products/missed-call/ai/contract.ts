@@ -21,6 +21,8 @@ export const aiReplySchema = z.object({
     preferred_time: z.string().nullable(),
   }),
   next_action: z.enum(NEXT_ACTIONS),
+  /** 1-based number of the offered time the customer picked, or null. Code checks it against what was offered. */
+  chosen_slot: z.number().nullable(),
   reply: z.string(),
 });
 

@@ -9,6 +9,8 @@ import { MEDIA_REPLY, OPT_OUT_ACK } from "../ai/replies";
 import { detectSafety } from "../ai/safety";
 import type { EscalationReason } from "../escalation-email";
 import { parseHours } from "../hours";
+import { formatSlot, localDate } from "../slots";
+import { parseOffered, runBooking, type CalendarIntegration } from "./booking";
 import { escalateConversation } from "./escalate";
 import { configOf, requireLlm, requireMessaging } from "./shared";
 
@@ -16,7 +18,15 @@ const UNIQUE_VIOLATION = "23505";
 const CLOSED_STATES = ["escalated", "opted_out", "expired", "booked", "failed", "enquiry_logged"];
 
 type Customer = { id: string; phone_e164: string; name: string | null };
-type Conversation = { id: string; state: string; turn_count: number; customer: Customer };
+type Conversation = {
+  id: string;
+  state: string;
+  turn_count: number;
+  offered_slots: unknown;
+  booking_service: string | null;
+  booking_event_id: string | null;
+  customer: Customer;
+};
 
 function text(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -117,10 +127,21 @@ async function optOut(ctx: HandlerContext, conversation: Conversation, messageId
   await ctx.log.step({ step: "action", status: "ok", reason: "opted_out" });
 }
 
+async function findCalendarIntegration(ctx: HandlerContext): Promise<CalendarIntegration | null> {
+  const { data } = await ctx.admin
+    .from("integrations")
+    .select("id, status")
+    .eq("business_id", ctx.business.id)
+    .eq("provider", "google_calendar")
+    .maybeSingle();
+  return data;
+}
+
 /** Asks the model, retrying once when its answer is unusable. */
 async function askModel(
   ctx: HandlerContext,
   conversation: Conversation,
+  calendarBooking: boolean,
 ): Promise<{ ok: true; ai: AiReply } | { ok: false }> {
   const config = configOf(ctx);
   const { data: rows } = await ctx.admin
@@ -137,6 +158,9 @@ async function askModel(
     hours: parseHours(config.business_hours ?? ctx.business.business_hours),
     timezone: ctx.business.timezone,
     bookingEnabled: config.booking_enabled,
+    calendarBooking,
+    today: localDate(ctx.now, ctx.business.timezone),
+    offeredSlots: parseOffered(conversation.offered_slots).map((s) => formatSlot(s, ctx.business.timezone)),
     history,
   });
 
@@ -170,7 +194,7 @@ export const messageInbound: ProductHandler = async (ctx) => {
 
   const { data: found } = await admin
     .from("conversations")
-    .select("id, state, turn_count, customer:customers(id, phone_e164, name)")
+    .select("id, state, turn_count, offered_slots, booking_service, booking_event_id, customer:customers(id, phone_e164, name)")
     .eq("id", conversationId)
     .eq("business_id", business.id)
     .maybeSingle();
@@ -220,13 +244,18 @@ export const messageInbound: ProductHandler = async (ctx) => {
     return "done";
   }
 
+  // Booking runs against a connected Google Calendar. Booking switched on without a calendar
+  // keeps the old behaviour: details are taken and the team confirms.
+  const integration = config.booking_enabled ? await findCalendarIntegration(ctx) : null;
+  const calendarBooking = integration !== null;
+
   // Urgent and health-safety wording goes straight to a person; the model is not asked.
   const safety = detectSafety(rawBody);
   let ai: AiReply | null = null;
   let modelFailed = false;
   if (!safety.urgent && !safety.medical && turnCount < 8) {
     try {
-      const result = await askModel(ctx, conversation);
+      const result = await askModel(ctx, conversation, calendarBooking);
       if (result.ok) ai = result.ai;
       else modelFailed = true;
     } catch (error) {
@@ -246,7 +275,7 @@ export const messageInbound: ProductHandler = async (ctx) => {
 
   const decision = modelFailed
     ? ({ kind: "escalate", reason: "invalid_model_output" } as const)
-    : decide({ ai, safety, escalateOn: config.escalate_on, turnCount });
+    : decide({ ai, safety, escalateOn: config.escalate_on, turnCount, calendarBooking });
 
   await ctx.log.step({
     step: "ai",
@@ -273,14 +302,35 @@ export const messageInbound: ProductHandler = async (ctx) => {
     return "done";
   }
 
-  const sent = await reply(ctx, conversation, decision.reply);
+  let replyText: string;
+  let state: string;
+  let stateUpdate: Record<string, unknown> = {};
+  if (decision.kind === "booking") {
+    const outcome = await runBooking(ctx, conversation, ai as AiReply, integration as CalendarIntegration);
+    if (outcome.kind === "escalate") {
+      await escalateConversation(ctx, {
+        conversationId: conversation.id,
+        customerId: conversation.customer.id,
+        customerPhone: conversation.customer.phone_e164,
+        reason: outcome.reason,
+        intent: ai?.intent,
+      });
+      await markProcessed(ctx, stored.id, ai?.intent ?? "needs_human", ai?.confidence);
+      return "done";
+    }
+    ({ reply: replyText, state, update: stateUpdate } = outcome);
+  } else {
+    ({ reply: replyText, state } = decision);
+  }
+
+  const sent = await reply(ctx, conversation, replyText);
   if (sent.status === "blocked") {
     await ctx.log.step({ step: "action", status: "skipped", reason: `reply_blocked:${sent.reason}` });
   }
 
   await admin
     .from("conversations")
-    .update({ state: decision.state, ...(ai ? { last_intent: ai.intent } : {}) })
+    .update({ state, ...stateUpdate, ...(ai ? { last_intent: ai.intent } : {}) })
     .eq("id", conversation.id);
   await markProcessed(ctx, stored.id, ai?.intent ?? "other", ai?.confidence);
 

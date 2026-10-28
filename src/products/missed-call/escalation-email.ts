@@ -11,7 +11,8 @@ export type EscalationReason =
   | "invalid_model_output"
   | "ai_unavailable"
   | "model_requested"
-  | "calendar_error";
+  | "calendar_error"
+  | "no_availability";
 
 export const REASON_LABELS: Record<EscalationReason, string> = {
   complaint: "The customer made a complaint",
@@ -24,6 +25,7 @@ export const REASON_LABELS: Record<EscalationReason, string> = {
   ai_unavailable: "The assistant was unavailable",
   model_requested: "The assistant asked for a person to take over",
   calendar_error: "The calendar could not be used to book",
+  no_availability: "No free appointment times could be found to offer",
 };
 
 const MAX_EXCERPT = 200;

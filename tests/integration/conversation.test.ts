@@ -44,6 +44,7 @@ const answer = (overrides: Partial<AiReply> = {}): AiReply => ({
   confidence: 0.9,
   extracted: { name: null, service: null, preferred_date: null, preferred_time: null },
   next_action: "ask_question",
+  chosen_slot: null,
   reply: "We open at nine on weekdays.",
   ...overrides,
 });

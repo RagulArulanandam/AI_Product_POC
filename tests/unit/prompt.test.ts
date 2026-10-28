@@ -115,6 +115,7 @@ describe("aiReplySchema", () => {
     confidence: 0.8,
     extracted: { name: null, service: null, preferred_date: null, preferred_time: null },
     next_action: "ask_question",
+    chosen_slot: null,
     reply: "Hello",
   };
 
@@ -131,5 +132,49 @@ describe("aiReplySchema", () => {
     ["missing extracted fields", { ...valid, extracted: { name: null } }],
   ])("rejects %s", (_label, value) => {
     expect(aiReplySchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe("buildPrompt with calendar booking", () => {
+  const calendar: PromptInput = { ...base, bookingEnabled: true, calendarBooking: true, today: "2030-01-07" };
+
+  it("tells the model never to state times and to give dates as YYYY-MM-DD", () => {
+    const { system } = buildPrompt(calendar);
+    expect(system).toContain("NEVER state, suggest or invent a time");
+    expect(system).toContain("Today is 2030-01-07");
+    expect(system).toContain("preferred_date (YYYY-MM-DD)");
+    expect(system).not.toContain("You cannot book appointments");
+  });
+
+  it("lists the times already offered so the model can number the customer's pick", () => {
+    const { system } = buildPrompt({ ...calendar, offeredSlots: ["Tue 8 Jan at 09:00", "Wed 9 Jan at 14:00"] });
+    expect(system).toContain("1. Tue 8 Jan at 09:00");
+    expect(system).toContain("2. Wed 9 Jan at 14:00");
+    expect(system).toContain("chosen_slot");
+  });
+
+  it("does not mention offered times when none were offered", () => {
+    expect(buildPrompt(calendar).system).not.toContain("already offered");
+  });
+
+  it("asks for chosen_slot in the answer whatever the mode", () => {
+    expect(buildPrompt(base).system).toContain("- chosen_slot:");
+  });
+});
+
+describe("aiReplySchema chosen_slot", () => {
+  const valid = {
+    intent: "book_appointment",
+    confidence: 0.8,
+    extracted: { name: null, service: null, preferred_date: null, preferred_time: null },
+    next_action: "confirm_booking",
+    reply: "Hello",
+  };
+
+  it("accepts a number or null, and requires the field", () => {
+    expect(aiReplySchema.safeParse({ ...valid, chosen_slot: 2 }).success).toBe(true);
+    expect(aiReplySchema.safeParse({ ...valid, chosen_slot: null }).success).toBe(true);
+    expect(aiReplySchema.safeParse(valid).success).toBe(false);
+    expect(aiReplySchema.safeParse({ ...valid, chosen_slot: "2" }).success).toBe(false);
   });
 });
