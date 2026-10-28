@@ -218,6 +218,13 @@ describe("claim_due_actions", () => {
     const ids = new Set((await Promise.all(Array.from({ length: 8 }, () => enqueue()))).map((r) => r.id));
     const results = await Promise.all(Array.from({ length: 8 }, () => claim(1)));
     const claimed = results.flatMap((r) => (r.data ?? []).map((x) => x.id));
+    // Under contention a claim can come back empty (see claimDueAction), so drain the rest.
+    for (;;) {
+      const more = await claim(1);
+      if (!more.data || more.data.length === 0) break;
+      claimed.push(...more.data.map((x) => x.id));
+    }
+    // The point: no action is ever handed out twice, and none is lost.
     expect(claimed).toHaveLength(8);
     expect(new Set(claimed).size).toBe(8);
     expect(new Set(claimed)).toEqual(ids);

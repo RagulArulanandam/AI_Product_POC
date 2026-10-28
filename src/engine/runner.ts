@@ -10,6 +10,7 @@ import {
   type BusinessRow,
   type HandlerResult,
   type ScheduledAction,
+  type Services,
   type WebhookEvent,
 } from "./types";
 
@@ -18,7 +19,7 @@ export interface EngineDeps {
   products: readonly ProductManifest[];
   now: () => Date;
   /** Adapters and services handlers may use (injected so tests can pass fakes). */
-  services: Record<string, unknown>;
+  services: Services;
 }
 
 export type RunOutcome = "done" | "skipped" | "retried" | "failed";

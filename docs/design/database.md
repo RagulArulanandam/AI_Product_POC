@@ -22,6 +22,7 @@ This doc turns entities.md into schema rules. It describes decisions, not full S
 | 4 | `create_business_rpc` | 1 | `create_business()` |
 | 5 | `engine_tables` | 2 | `customers`, `conversations`, `messages`, `scheduled_actions`, `automation_logs`, `webhook_events`, `opt_outs`; `claim_due_actions()`; RLS |
 | 6 | `worker_cron` | 2 | pg_cron job that calls the worker |
+| 6b | `claim_due_actions_materialized` | 3 | replaces `claim_due_actions` with the materialized-CTE version |
 | 7 | `phone_numbers` | 3 | `phone_numbers`; RLS |
 
 Each migration also adds `updated_at` triggers for its tables.
@@ -100,25 +101,29 @@ A single `set_updated_at()` trigger function sets `new.updated_at = now()` befor
 `claim_due_actions(batch int) -> setof scheduled_actions`, `SECURITY INVOKER`, service role only:
 
 ```sql
-update scheduled_actions
-   set status = 'processing', locked_at = now(), attempts = attempts + 1
- where id in (
-   select a.id from scheduled_actions a
-    where a.run_at <= now()
-      and (a.status = 'pending'
-           or (a.status = 'processing' and a.locked_at < now() - interval '5 minutes'))
-      and not exists (
-        select 1 from scheduled_actions p
-         where p.conversation_id = a.conversation_id
-           and p.status = 'processing'
-           and p.locked_at >= now() - interval '5 minutes'
-           and p.id <> a.id)
-    order by run_at
-    limit batch
-    for update skip locked)
-returning *;
+with picked as materialized (
+  select a.id from scheduled_actions a
+   where a.run_at <= now()
+     and a.attempts < a.max_attempts
+     and (a.status = 'pending'
+          or (a.status = 'processing' and a.locked_at < now() - interval '5 minutes'))
+     and not exists (
+       select 1 from scheduled_actions p
+        where p.conversation_id = a.conversation_id
+          and p.status = 'processing'
+          and p.locked_at >= now() - interval '5 minutes'
+          and p.id <> a.id)
+   order by a.run_at
+   limit batch
+   for update skip locked
+)
+update scheduled_actions s
+   set status = 'processing', locked_at = now(), attempts = s.attempts + 1
+  from picked
+ where s.id = picked.id
+returning s.*;
 ```
-- `FOR UPDATE SKIP LOCKED` means two overlapping ticks never take the same row.
+- `FOR UPDATE SKIP LOCKED` means two overlapping ticks never take the same row. The selection must be a `MATERIALIZED` CTE: the first version used `WHERE id IN (subselect)`, which Postgres can re-run, so one call could claim more than `batch` rows (found by a flaky test; fixed in migration `20261028150000`).
 - The `not exists` clause stops a conversation having two actions processing at once. The worker calls with `batch = 1` in a loop, so the clause holds across concurrent workers.
 - The stale-lock clause recovers rows left `processing` by a crashed worker (it consumes an attempt).
 - Success, retry with backoff (1, 5, 15 minutes) and final failure are written by the engine (automation-engine.md): success sets `done`; a retryable failure sets `pending` with a later `run_at`; reaching `max_attempts` sets `failed`.

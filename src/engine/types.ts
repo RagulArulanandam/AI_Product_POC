@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
+import type { MessagingAdapter } from "@/adapters/messaging/interface";
 import type { StepLogger } from "./log";
 
 export type Admin = SupabaseClient<Database>;
@@ -22,7 +23,7 @@ export interface HandlerContext {
   action: ScheduledAction;
   event?: WebhookEvent;
   /** Injected adapters and services, so tests can pass fakes. Filled in from Phase 3. */
-  services: Record<string, unknown>;
+  services: Services;
   log: StepLogger;
   /** Injected clock: handlers never call Date.now() themselves. */
   now: Date;
@@ -35,5 +36,13 @@ export type ProductHandler = (ctx: HandlerContext) => Promise<HandlerResult>;
  * (for example `send_first_message`) they process.
  */
 export type ProductHandlers = Record<string, ProductHandler>;
+
+/**
+ * Adapters handlers may use. Lazy factories, so a missing vendor key only breaks the actions
+ * that actually need that vendor. Tests pass fakes.
+ */
+export interface Services {
+  messaging?: () => MessagingAdapter;
+}
 
 export const HANDLE_EVENT = "handle_event";

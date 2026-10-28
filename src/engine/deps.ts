@@ -1,3 +1,4 @@
+import { getMessaging } from "@/adapters/messaging";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listProducts } from "@/products/registry";
 import type { EngineDeps } from "./runner";
@@ -8,6 +9,6 @@ export function createEngineDeps(): EngineDeps {
     admin: createAdminClient(),
     products: listProducts(),
     now: () => new Date(),
-    services: {}, // adapters are added here from Phase 3
+    services: { messaging: getMessaging },
   };
 }
