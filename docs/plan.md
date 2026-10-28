@@ -1,0 +1,71 @@
+# Plan
+
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 0.
+
+## Phase 0: Docs and accounts
+- [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
+- [x] Draft design docs with Claude Code in plan mode: architecture, entities, database, auth, automation-engine, frontend, integrations, security-privacy, testing (approved)
+- [ ] Accounts and keys in .env.local: Supabase (local first), OpenAI, Resend, Google Cloud OAuth, Twilio (number + WhatsApp sandbox), tunnel
+- [ ] Submit WhatsApp sender / template approvals (runs in the background)
+Done when: docs reviewed, keys in place, nothing blocked.
+
+## Phase 1: Platform core
+- [ ] Scaffold Next.js + TS + Tailwind + shadcn, lint/typecheck/test wired
+- [ ] Local Supabase, migrations: businesses, memberships, products, business_products, subscriptions, integrations
+- [ ] RLS policies + cross-tenant isolation test
+- [ ] Auth: signup/login, business creation, membership, route protection
+- [ ] Product registry (manifest) with Product 1 + two "coming soon" stubs
+- [ ] Seed script (2-3 businesses)
+Done when: two test businesses cannot see each other's data; products listed from the registry.
+
+## Phase 2: Automation engine
+- [ ] Tables: customers, conversations, messages, scheduled_actions, automation_logs
+- [ ] Logging helper; event -> handler runner
+- [ ] Worker endpoint + pg_cron every minute (FOR UPDATE SKIP LOCKED), retries with backoff
+- [ ] Webhook helper: signature verify + idempotency
+Done when: a test event passes through the queue and is logged; duplicates are ignored.
+
+## Phase 3: Product 1, outbound
+- [ ] Messaging adapter + Twilio implementation
+- [ ] Voice webhook, business lookup by dialled number, conditions (enabled, hours, dedupe, opt-out)
+- [ ] Customer upsert, conversation create, scheduled send after delay
+- [ ] Simulate-missed-call dev endpoint
+Done when: a missed call produces a WhatsApp message on a real phone after the delay.
+
+## Phase 4: Product 1, AI conversation
+- [ ] LLM adapter (OpenAI), structured output, schema validation, bad-JSON fallback
+- [ ] Inbound WhatsApp webhook, idempotent message storage
+- [ ] Intent handling, guardrails, turn cap, STOP handling
+- [ ] Escalation: flag + Resend email to owner
+Done when: natural chat works; complaints and "speak to someone" escalate.
+
+## Phase 5: Customer dashboard
+- [ ] Onboarding, product cards + toggles, Product 1 config form
+- [ ] Integrations page, conversation list/detail, activity metrics, billing status page
+Done when: owner can configure and watch Product 1 without touching the DB.
+
+## Phase 6: Calendar booking
+- [ ] Google OAuth connect/disconnect, encrypted token storage, narrow scopes
+- [ ] Calendar adapter: free/busy, slot computation, re-check, create event
+- [ ] Booking states and confirmation message
+Done when: call -> chat -> event on the calendar, end to end.
+
+## Phase 7: Admin panel
+- [ ] Business list, subscription status, product toggle, integration status
+- [ ] Automation logs, failed-automation view with retry, basic metrics
+Done when: admin can diagnose and retry a failed automation.
+
+## Phase 8: Hardening
+- [ ] Rate limiting on webhooks and signup
+- [ ] Error states, README (setup, env vars, deploy), demo script
+- [ ] Security review: RLS, secrets, token handling
+Done when: the demo runs three times in a row without DB edits.
+
+## Later
+Products 2 and 3, Stripe, per-business WhatsApp senders, Outlook.
+
+## Decisions pending
+None. See spec.md section 6 for resolved decisions (Twilio, local-first then Vercel, Google Calendar).
+
+## Deployment note
+Phases 1-8 run locally with a tunnel for webhooks. Deploy to Vercel (and switch Supabase to hosted) only after the Phase 6 end-to-end flow works locally, as part of Phase 8.
