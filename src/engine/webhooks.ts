@@ -113,8 +113,15 @@ export interface WebhookProvider {
   verify(input: { url: string; params: Record<string, string>; signature: string | null }): boolean;
   /** Which header carries the signature. */
   signatureHeader: string;
-  /** Turns verified params into an event; null means the payload is unusable. */
-  parse(params: Record<string, string>, admin: Admin): Promise<NormalisedEvent | null> | NormalisedEvent | null;
+  /**
+   * Turns verified params into an event. null means the payload is unusable (answered 400);
+   * "ignore" means it is valid but needs no action, such as an in-flight delivery status
+   * (answered 200, nothing stored).
+   */
+  parse(
+    params: Record<string, string>,
+    admin: Admin,
+  ): Promise<NormalisedEvent | "ignore" | null> | NormalisedEvent | "ignore" | null;
   /** Body returned to the provider (for example TwiML). Defaults to JSON `{ ok: true }`. */
   respond?(result: IngestResult): Response;
 }
@@ -148,7 +155,8 @@ export async function handleWebhook(
   }
 
   const event = await provider.parse(params, deps.admin);
-  if (!event) return Response.json({ error: "bad_request" }, { status: 400 });
+  if (event === null) return Response.json({ error: "bad_request" }, { status: 400 });
+  if (event === "ignore") return Response.json({ ok: true, ignored: true });
 
   const result = await ingestWebhookEvent(deps.admin, provider.name, event);
   if (result.status === "unresolved") {

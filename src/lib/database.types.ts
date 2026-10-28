@@ -259,6 +259,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"phone_numbers": {
+                  Row: {
+                    "business_id": string,"created_at": string,"e164": string,"id": string,"kind": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"created_at"?: string,"e164": string,"id"?: string,"kind"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_id"?: string,"created_at"?: string,"e164"?: string,"id"?: string,"kind"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "phone_numbers_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"platform_admins": {
                   Row: {
                     "created_at": string,"id": string,"updated_at": string,"user_id": string

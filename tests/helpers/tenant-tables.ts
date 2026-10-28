@@ -167,6 +167,25 @@ export const TENANT_TABLES: TenantTableSpec[] = [
     },
   },
   {
+    table: "phone_numbers",
+    scopeColumn: "business_id",
+    tenantReadable: true,
+    tamper: { e164: "+447700900998" },
+    crossTenantInsert: ({ victimBusinessId }) => ({ business_id: victimBusinessId, e164: "+447700900997" }),
+    ensureRow: async (admin, businessId) => {
+      const existing = await admin.from("phone_numbers").select("id").eq("business_id", businessId).limit(1);
+      if (existing.data && existing.data.length > 0) return;
+      check(
+        "ensureRow phone_numbers",
+        await admin
+          .from("phone_numbers")
+          .insert({ business_id: businessId, e164: `+447700900${Math.floor(Math.random() * 800) + 100}` })
+          .select("id")
+          .single(),
+      );
+    },
+  },
+  {
     table: "customers",
     scopeColumn: "business_id",
     tenantReadable: true,
