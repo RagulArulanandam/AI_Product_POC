@@ -46,7 +46,9 @@ Seed accounts (password `Password123!`, local data only): `admin@poc.local`, `ow
 With the app running, `ENABLE_DEV_ENDPOINTS=true` and `WORKER_SECRET` in `.env.local`, simulate a missed call for a business (use a phone that has joined your Twilio WhatsApp test environment):
 
 ```bash
-curl -X POST http://localhost:3000/api/dev/simulate-missed-call \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"businessId":"<business uuid>","from":"+44..."}'
+curl -X POST http://localhost:3000/api/dev/simulate-missed-call \
+  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \
+  -d '{"businessId":"<business uuid>","from":"+44..."}'
 ```
 
 The message is sent after the delay in the product config (default 2 minutes) by the cron job. Watch `automation_logs`, `conversations` and `messages` in Supabase Studio (http://127.0.0.1:54323).
