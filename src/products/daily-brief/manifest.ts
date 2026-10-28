@@ -12,4 +12,5 @@ export const dailyBriefManifest: ProductManifest = {
   configSchema,
   defaultConfig: configSchema.parse({}),
   handledEvents: [],
+  handlers: {},
 };

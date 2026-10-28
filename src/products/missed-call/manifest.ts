@@ -9,4 +9,5 @@ export const missedCallManifest: ProductManifest = {
   configSchema: missedCallConfigSchema,
   defaultConfig: missedCallConfigSchema.parse({}),
   handledEvents: ["call.missed", "message.inbound", "message.status"],
+  handlers: {}, // Phases 3 and 4
 };

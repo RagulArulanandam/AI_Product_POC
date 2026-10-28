@@ -12,4 +12,5 @@ export const priorityInboxManifest: ProductManifest = {
   configSchema,
   defaultConfig: configSchema.parse({}),
   handledEvents: [],
+  handlers: {},
 };

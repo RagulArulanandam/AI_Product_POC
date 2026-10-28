@@ -15,7 +15,12 @@ export function scanText(text: string): string[] {
 }
 
 // Files that legitimately contain the patterns (this scanner and its tests).
-const SKIP = [/^package-lock\.json$/, /^scripts\/check-secrets\.ts$/, /^tests\/unit\/check-secrets\.test\.ts$/];
+const SKIP = [
+  /^package-lock\.json$/,
+  /^scripts\/check-secrets\.ts$/,
+  /^tests\/unit\/check-secrets\.test\.ts$/,
+  /^tests\/unit\/redact\.test\.ts$/, // feeds fake key-looking strings to the redactor
+];
 
 function listFiles(): string[] {
   const out = execFileSync("git", ["ls-files", "-co", "--exclude-standard"], { encoding: "utf8" });
