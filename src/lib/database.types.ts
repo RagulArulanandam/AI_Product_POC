@@ -23,7 +23,39 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "business_products": {
+            "automation_logs": {
+                  Row: {
+                    "business_id": string,"conversation_id": string | null,"created_at": string,"details": NonNullable<Json>,"event_type": string,"id": string,"reason": string | null,"scheduled_action_id": string | null,"status": string,"step": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"conversation_id"?: string | null,"created_at"?: string,"details"?: NonNullable<Json>,"event_type": string,"id"?: string,"reason"?: string | null,"scheduled_action_id"?: string | null,"status": string,"step": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_id"?: string,"conversation_id"?: string | null,"created_at"?: string,"details"?: NonNullable<Json>,"event_type"?: string,"id"?: string,"reason"?: string | null,"scheduled_action_id"?: string | null,"status"?: string,"step"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "automation_logs_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "automation_logs_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "automation_logs_scheduled_action_id_fkey"
+      columns: ["scheduled_action_id"]
+isOneToOne: false
+      referencedRelation: "scheduled_actions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"business_products": {
                   Row: {
                     "business_id": string,"config": NonNullable<Json>,"created_at": string,"enabled": boolean,"id": string,"product_id": string,"updated_at": string
                   }
@@ -62,6 +94,58 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"conversations": {
+                  Row: {
+                    "booking_end": string | null,"booking_event_id": string | null,"booking_start": string | null,"business_id": string,"created_at": string,"customer_id": string,"escalated_at": string | null,"escalation_reason": string | null,"expires_at": string | null,"id": string,"last_inbound_at": string | null,"last_intent": string | null,"last_outbound_at": string | null,"offered_slots": NonNullable<Json>,"product_id": string,"started_at": string,"state": string,"trigger_call_sid": string | null,"turn_count": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "booking_end"?: string | null,"booking_event_id"?: string | null,"booking_start"?: string | null,"business_id": string,"created_at"?: string,"customer_id": string,"escalated_at"?: string | null,"escalation_reason"?: string | null,"expires_at"?: string | null,"id"?: string,"last_inbound_at"?: string | null,"last_intent"?: string | null,"last_outbound_at"?: string | null,"offered_slots"?: NonNullable<Json>,"product_id": string,"started_at"?: string,"state"?: string,"trigger_call_sid"?: string | null,"turn_count"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "booking_end"?: string | null,"booking_event_id"?: string | null,"booking_start"?: string | null,"business_id"?: string,"created_at"?: string,"customer_id"?: string,"escalated_at"?: string | null,"escalation_reason"?: string | null,"expires_at"?: string | null,"id"?: string,"last_inbound_at"?: string | null,"last_intent"?: string | null,"last_outbound_at"?: string | null,"offered_slots"?: NonNullable<Json>,"product_id"?: string,"started_at"?: string,"state"?: string,"trigger_call_sid"?: string | null,"turn_count"?: number,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "conversations_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversations_customer_id_fkey"
+      columns: ["customer_id"]
+isOneToOne: false
+      referencedRelation: "customers"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "conversations_product_id_fkey"
+      columns: ["product_id"]
+isOneToOne: false
+      referencedRelation: "products"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"customers": {
+                  Row: {
+                    "business_id": string,"created_at": string,"id": string,"last_contacted_at": string | null,"name": string | null,"phone_e164": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id": string,"created_at"?: string,"id"?: string,"last_contacted_at"?: string | null,"name"?: string | null,"phone_e164": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_id"?: string,"created_at"?: string,"id"?: string,"last_contacted_at"?: string | null,"name"?: string | null,"phone_e164"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "customers_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"integration_secrets": {
                   Row: {
@@ -129,6 +213,52 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"messages": {
+                  Row: {
+                    "body": string,"business_id": string,"confidence": number | null,"conversation_id": string,"created_at": string,"direction": string,"error": string | null,"id": string,"intent": string | null,"provider_sid": string | null,"sender": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body"?: string,"business_id": string,"confidence"?: number | null,"conversation_id": string,"created_at"?: string,"direction": string,"error"?: string | null,"id"?: string,"intent"?: string | null,"provider_sid"?: string | null,"sender": string,"status": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "body"?: string,"business_id"?: string,"confidence"?: number | null,"conversation_id"?: string,"created_at"?: string,"direction"?: string,"error"?: string | null,"id"?: string,"intent"?: string | null,"provider_sid"?: string | null,"sender"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "messages_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "messages_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"opt_outs": {
+                  Row: {
+                    "created_at": string,"id": string,"opted_out_at": string,"phone_e164": string,"source_business_id": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"opted_out_at"?: string,"phone_e164": string,"source_business_id"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"opted_out_at"?: string,"phone_e164"?: string,"source_business_id"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "opt_outs_source_business_id_fkey"
+      columns: ["source_business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"platform_admins": {
                   Row: {
                     "created_at": string,"id": string,"updated_at": string,"user_id": string
@@ -157,6 +287,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"scheduled_actions": {
+                  Row: {
+                    "attempts": number,"business_id": string,"conversation_id": string | null,"created_at": string,"dedupe_key": string,"id": string,"last_error": string | null,"locked_at": string | null,"max_attempts": number,"payload": NonNullable<Json>,"run_at": string,"status": string,"type": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"business_id": string,"conversation_id"?: string | null,"created_at"?: string,"dedupe_key": string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"max_attempts"?: number,"payload"?: NonNullable<Json>,"run_at"?: string,"status"?: string,"type": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "attempts"?: number,"business_id"?: string,"conversation_id"?: string | null,"created_at"?: string,"dedupe_key"?: string,"id"?: string,"last_error"?: string | null,"locked_at"?: string | null,"max_attempts"?: number,"payload"?: NonNullable<Json>,"run_at"?: string,"status"?: string,"type"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "scheduled_actions_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "scheduled_actions_conversation_id_fkey"
+      columns: ["conversation_id"]
+isOneToOne: false
+      referencedRelation: "conversations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"subscriptions": {
                   Row: {
                     "business_id": string,"created_at": string,"current_period_end": string | null,"id": string,"notes": string,"plan": string,"status": string,"updated_at": string
@@ -177,6 +333,26 @@ isOneToOne: true
       referencedColumns: ["id"]
     }
                   ]
+                },"webhook_events": {
+                  Row: {
+                    "business_id": string | null,"created_at": string,"id": string,"payload": NonNullable<Json>,"processed_at": string | null,"provider": string,"provider_event_id": string,"received_at": string,"status": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "business_id"?: string | null,"created_at"?: string,"id"?: string,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"provider": string,"provider_event_id": string,"received_at"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Update: {
+                    "business_id"?: string | null,"created_at"?: string,"id"?: string,"payload"?: NonNullable<Json>,"processed_at"?: string | null,"provider"?: string,"provider_event_id"?: string,"received_at"?: string,"status"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "webhook_events_business_id_fkey"
+      columns: ["business_id"]
+isOneToOne: false
+      referencedRelation: "businesses"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -189,6 +365,29 @@ isOneToOne: true
 "can_write":
 { Args: { "b": string }; Returns: boolean
                            },
+"claim_due_actions":
+{ Args: { "batch"?: number }; Returns: {
+              "attempts": number,
+"business_id": string,
+"conversation_id": string | null,
+"created_at": string,
+"dedupe_key": string,
+"id": string,
+"last_error": string | null,
+"locked_at": string | null,
+"max_attempts": number,
+"payload": NonNullable<Json>,
+"run_at": string,
+"status": string,
+"type": string,
+"updated_at": string
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "scheduled_actions"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "create_business":
 { Args: { "p_name": string,"p_phone": string,"p_timezone": string }; Returns: string
                            },
