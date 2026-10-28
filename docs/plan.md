@@ -24,6 +24,7 @@ Done when: two test businesses cannot see each other's data; products listed fro
 - [x] Worker endpoint + pg_cron every minute (FOR UPDATE SKIP LOCKED), retries with backoff
 - [x] Webhook helper: signature verify + idempotency
 Done when: a test event passes through the queue and is logged; duplicates are ignored. (Done: see tests/integration/webhooks.test.ts "end to end". Cron to app was also checked by hand through Docker.)
+Status of Phase 3 live test: the pipeline ran for real (cron -> handler -> real Twilio request), but Twilio rejected the free-form message (error 21654) because the trial account uses the template-only "Try out WhatsApp" environment. Needs a decision: legacy sandbox, template mode, or upgrade (see integrations.md).
 Still to do in Phase 3: wire the helper into real routes with `after()` (it is injected in the helper, so not yet exercised in a running route) and add the Twilio signature verifier.
 
 ## Phase 3: Product 1, outbound

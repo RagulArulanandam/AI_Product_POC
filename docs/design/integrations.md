@@ -45,6 +45,8 @@ All verify the signature (using `PUBLIC_BASE_URL`), store a `webhook_events` row
 - UK forwarding codes (carrier-dependent, verify with the carrier): no answer `**61*<number>#`, busy `**67*<number>#`, unreachable `**62*<number>#`, cancel `##002#`. Onboarding shows these as instructions.
 
 ### WhatsApp sandbox rules (POC)
+**Finding from the first live test (28 Oct 2026):** Twilio has two trial environments. The new Console's "Try out WhatsApp" (sender `+44 7460 077297`, which this POC's trial account uses) only allows messages sent as one of Twilio's pre-approved templates (`ContentSid` required, no free text, even inside the 24 hour window; the Content API is not available on trial accounts). A free-form `Body` is rejected with error 21654 "ContentSid Required". The legacy Sandbox (shared number `+14155238886`, activated in the legacy Console) allows free-form replies inside the 24 hour window, which Product 1's AI conversation needs. The rules below describe the legacy sandbox.
+
 - Sandbox sender `+44 7460 077297`. A tester phone must send `join twilio-trial` to it first. Membership lasts about 72 hours; then rejoin.
 - Only one tester recipient can be active at a time. The current tester is `+447887153223`.
 - Free-form messages only work inside the 24-hour customer-service window (opened by the customer's join message or any message they send). Outside it, WhatsApp requires an approved template. The sandbox only offers sample templates.
