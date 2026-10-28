@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 3 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 4, blocked on the WhatsApp free-text decision (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -24,15 +24,15 @@ Done when: two test businesses cannot see each other's data; products listed fro
 - [x] Worker endpoint + pg_cron every minute (FOR UPDATE SKIP LOCKED), retries with backoff
 - [x] Webhook helper: signature verify + idempotency
 Done when: a test event passes through the queue and is logged; duplicates are ignored. (Done: see tests/integration/webhooks.test.ts "end to end". Cron to app was also checked by hand through Docker.)
-Status of Phase 3 live test: the pipeline ran for real (cron -> handler -> real Twilio request), but Twilio rejected the free-form message (error 21654) because the trial account uses the template-only "Try out WhatsApp" environment. Needs a decision: legacy sandbox, template mode, or upgrade (see integrations.md).
 Still to do in Phase 3: wire the helper into real routes with `after()` (it is injected in the helper, so not yet exercised in a running route) and add the Twilio signature verifier.
 
 ## Phase 3: Product 1, outbound
-- [ ] Messaging adapter + Twilio implementation
-- [ ] Voice webhook, business lookup by dialled number, conditions (enabled, hours, dedupe, opt-out)
-- [ ] Customer upsert, conversation create, scheduled send after delay
-- [ ] Simulate-missed-call dev endpoint
-Done when: a missed call produces a WhatsApp message on a real phone after the delay.
+- [x] Messaging adapter + Twilio implementation (free-text mode, plus trial template mode)
+- [x] Voice webhook, business lookup by dialled number, conditions (enabled, hours, dedupe, opt-out)
+- [x] Customer upsert, conversation create, scheduled send after delay
+- [x] Simulate-missed-call dev endpoint
+Done when: a missed call produces a WhatsApp message on a real phone after the delay. (Done on 28 Oct 2026: a simulated call reached the tester phone about 2 minutes later and Twilio reported it delivered; the delivery callback came back through the tunnel. Caveat: the trial account can only send Twilio's fixed "Appointment Reminders" template, not our wording. A real forwarded call is untested because the account has no voice number.)
+Open decision before Phase 4: the AI conversation needs free-text replies, which the trial's template-only environment does not allow. Options: the legacy sandbox, or a paid upgrade with a registered sender.
 
 ## Phase 4: Product 1, AI conversation
 - [ ] LLM adapter (OpenAI), structured output, schema validation, bad-JSON fallback

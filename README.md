@@ -7,7 +7,8 @@ Scope and decisions: [docs/spec.md](docs/spec.md). Build order: [docs/plan.md](d
 ## Status
 Phase 1 (platform core) is done: sign up, onboarding, route protection, tenant isolation with RLS, product registry and seed data.
 Phase 2 (automation engine) is done: queue, runner with retries, worker endpoint, pg_cron and an idempotent webhook helper. It has no customer-facing behaviour yet; it is exercised by tests.
-Phases 3 to 8 (Product 1, dashboard, calendar, admin, hardening) are not built yet.
+Phase 3 (Product 1 outbound) is done: a missed call (real webhook or simulated) opens a conversation and sends the first WhatsApp message after the configured delay. On a Twilio trial account the message is Twilio's fixed template, not our text (see docs/design/integrations.md).
+Phases 4 to 8 (AI conversation, dashboard, calendar, admin, hardening) are not built yet.
 
 ## Prerequisites
 - Node.js 24 and npm
@@ -40,6 +41,15 @@ Seed accounts (password `Password123!`, local data only): `admin@poc.local`, `ow
 | `npm run db:reset` / `db:seed` / `db:types` | rebuild the database, seed it, regenerate types |
 | `npm run db:setup` | give pg_cron the worker URL and secret (stored in Supabase Vault) |
 | `npm run worker:poll` | call the worker every 10 seconds (fallback for cron) |
+
+## Try the missed-call flow
+With the app running, `ENABLE_DEV_ENDPOINTS=true` and `WORKER_SECRET` in `.env.local`, simulate a missed call for a business (use a phone that has joined your Twilio WhatsApp test environment):
+
+```bash
+curl -X POST http://localhost:3000/api/dev/simulate-missed-call \n  -H "Authorization: Bearer $WORKER_SECRET" -H "Content-Type: application/json" \n  -d '{"businessId":"<business uuid>","from":"+44..."}'
+```
+
+The message is sent after the delay in the product config (default 2 minutes) by the cron job. Watch `automation_logs`, `conversations` and `messages` in Supabase Studio (http://127.0.0.1:54323).
 
 ## Layout
 ```
