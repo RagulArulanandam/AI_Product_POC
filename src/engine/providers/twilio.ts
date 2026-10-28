@@ -1,4 +1,6 @@
 import type { MessagingAdapter } from "@/adapters/messaging/interface";
+import { isStopMessage } from "../optout";
+import type { Admin } from "../types";
 import type { WebhookProvider } from "../webhooks";
 
 /** Twilio signs requests with this header (integrations.md section 2). */
@@ -70,5 +72,68 @@ export function twilioStatusProvider(messaging: MessagingAdapter, options: Statu
         businessId,
       };
     },
+  };
+}
+
+const OPEN_STATES = ["pending_send", "awaiting_reply", "in_conversation", "offering_slots"];
+
+/**
+ * The shared WhatsApp sender means a reply carries no business, only the customer's number. It
+ * belongs to that number's most recent open conversation, across businesses (entities.md
+ * section 5). Returns null when there is none, and flags when several businesses are in play.
+ */
+export async function resolveOpenConversation(
+  admin: Admin,
+  phone: string,
+): Promise<{ conversationId: string; businessId: string; ambiguous: boolean } | null> {
+  const { data: customers } = await admin.from("customers").select("id").eq("phone_e164", phone);
+  const customerIds = (customers ?? []).map((c) => c.id);
+  if (customerIds.length === 0) return null;
+
+  const { data } = await admin
+    .from("conversations")
+    .select("id, business_id, started_at")
+    .in("customer_id", customerIds)
+    .in("state", OPEN_STATES)
+    .order("started_at", { ascending: false });
+
+  const rows = data ?? [];
+  if (rows.length === 0) return null;
+  const businesses = new Set(rows.map((r) => r.business_id));
+  return { conversationId: rows[0].id, businessId: rows[0].business_id, ambiguous: businesses.size > 1 };
+}
+
+/** An inbound WhatsApp message from a customer, routed to their open conversation. */
+export function twilioInboundProvider(messaging: MessagingAdapter): WebhookProvider {
+  return {
+    name: "twilio-whatsapp",
+    signatureHeader: SIGNATURE_HEADER,
+    verify: (input) => messaging.validateWebhook(input),
+    parse: async (params, admin) => {
+      const message = messaging.parseInboundMessage(params);
+      if (!message) return null;
+
+      const open = await resolveOpenConversation(admin, message.from);
+      if (open?.ambiguous) {
+        console.warn(JSON.stringify({ event: "webhook_ambiguous_conversation", provider: "twilio-whatsapp" }));
+      }
+      return {
+        eventId: message.providerSid,
+        type: "message.inbound",
+        data: { from: message.from, body: message.body, hasMedia: message.hasMedia },
+        businessId: open?.businessId ?? null,
+        conversationId: open?.conversationId ?? null,
+      };
+    },
+    // A STOP from someone we have no open conversation with must still opt them out.
+    onUnresolved: async (event, admin) => {
+      const from = typeof event.data.from === "string" ? event.data.from : null;
+      const body = typeof event.data.body === "string" ? event.data.body : "";
+      if (from && isStopMessage(body)) {
+        await admin.from("opt_outs").upsert({ phone_e164: from }, { onConflict: "phone_e164", ignoreDuplicates: true });
+      }
+    },
+    // Twilio only needs a 2xx. (The trial environment does not support TwiML replies anyway.)
+    respond: () => new Response(null, { status: 200 }),
   };
 }

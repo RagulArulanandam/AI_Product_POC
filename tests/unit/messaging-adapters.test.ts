@@ -209,7 +209,11 @@ describe("FakeMessagingAdapter", () => {
     const fake = new FakeMessagingAdapter();
     const first = await fake.sendMessage({ to: "+447887153223", body: "one" });
     const second = await fake.sendMessage({ to: "+447887153223", body: "two" });
-    expect([first.providerSid, second.providerSid]).toEqual(["SMfake000001", "SMfake000002"]);
+    expect(first.providerSid).toMatch(/^SMfake[0-9a-f]{8}0001$/);
+    expect(second.providerSid).toMatch(/^SMfake[0-9a-f]{8}0002$/);
+    expect(new FakeMessagingAdapter().sent).toEqual([]);
+    const other = await new FakeMessagingAdapter().sendMessage({ to: "+447887153223", body: "x" });
+    expect(other.providerSid).not.toBe(first.providerSid); // different processes never collide
     expect(fake.sent.map((m) => m.body)).toEqual(["one", "two"]);
 
     fake.failNext(new AdapterError("rate_limited", "slow down"));

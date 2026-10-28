@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { AdapterError } from "@/lib/errors";
 import type { MessagingAdapter } from "./interface";
 import { isE164, parseInboundMessage, parseMessageStatus, parseVoice, VOICE_REJECT_TWIML } from "./parse";
@@ -16,6 +17,7 @@ export class FakeMessagingAdapter implements MessagingAdapter {
   /** The signature value validateWebhook accepts. */
   validSignature = "fake-valid";
   private counter = 0;
+  private readonly runId = randomUUID().replace(/-/g, "").slice(0, 8);
   private failures: AdapterError[] = [];
 
   /** Makes the next `times` sends throw `error`. */
@@ -37,7 +39,8 @@ export class FakeMessagingAdapter implements MessagingAdapter {
     if (failure) throw failure;
 
     this.counter += 1;
-    const providerSid = `SMfake${String(this.counter).padStart(6, "0")}`;
+    // The run id keeps SIDs unique across processes and restarts (they are unique in the database).
+    const providerSid = `SMfake${this.runId}${String(this.counter).padStart(4, "0")}`;
     this.sent.push({ to: input.to, body: input.body, providerSid });
     return { providerSid, ...(this.templateSid ? { templateSid: this.templateSid } : {}) };
   }

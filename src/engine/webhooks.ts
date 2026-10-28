@@ -13,6 +13,11 @@ export interface NormalisedEvent {
   data: Record<string, unknown>;
   /** The business the event belongs to, when the route could resolve it. */
   businessId: string | null;
+  /**
+   * The conversation the event belongs to, when known. Putting it on the queued action means
+   * messages of one conversation are never processed at the same time.
+   */
+  conversationId?: string | null;
 }
 
 export type IngestResult =
@@ -37,7 +42,11 @@ export async function ingestWebhookEvent(
       provider,
       provider_event_id: event.eventId,
       business_id: event.businessId,
-      payload: { type: event.type, data: event.data } as never,
+      payload: {
+        type: event.type,
+        data: event.data,
+        ...(event.conversationId ? { conversation_id: event.conversationId } : {}),
+      } as never,
     })
     .select("id")
     .single();
@@ -47,7 +56,7 @@ export async function ingestWebhookEvent(
 
     const { data: existing, error: lookupError } = await admin
       .from("webhook_events")
-      .select("id, business_id, status")
+      .select("id, business_id, status, payload")
       .eq("provider", provider)
       .eq("provider_event_id", event.eventId)
       .single();
@@ -56,8 +65,10 @@ export async function ingestWebhookEvent(
     // A crash between the insert and the enqueue would leave the event without work. The
     // dedupe key makes re-queueing a no-op when the action already exists.
     if (existing.business_id && existing.status === "received") {
+      const stored = (existing.payload ?? {}) as { conversation_id?: unknown };
       await enqueueAction(admin, {
         businessId: existing.business_id,
+        conversationId: typeof stored.conversation_id === "string" ? stored.conversation_id : null,
         type: HANDLE_EVENT,
         payload: { webhook_event_id: existing.id },
         dedupeKey: `evt:${existing.id}`,
@@ -76,6 +87,7 @@ export async function ingestWebhookEvent(
 
   const queued = await enqueueAction(admin, {
     businessId: event.businessId,
+    conversationId: event.conversationId ?? null,
     type: HANDLE_EVENT,
     payload: { webhook_event_id: data.id },
     dedupeKey: `evt:${data.id}`,
@@ -122,6 +134,11 @@ export interface WebhookProvider {
     params: Record<string, string>,
     admin: Admin,
   ): Promise<NormalisedEvent | "ignore" | null> | NormalisedEvent | "ignore" | null;
+  /**
+   * Called when an event could not be tied to any business (so nothing is queued) but may still
+   * need a side effect, such as recording a STOP from a number we have no conversation with.
+   */
+  onUnresolved?(event: NormalisedEvent, admin: Admin): Promise<void>;
   /** Body returned to the provider (for example TwiML). Defaults to JSON `{ ok: true }`. */
   respond?(result: IngestResult): Response;
 }
@@ -161,6 +178,7 @@ export async function handleWebhook(
   const result = await ingestWebhookEvent(deps.admin, provider.name, event);
   if (result.status === "unresolved") {
     console.warn(JSON.stringify({ event: "webhook_unresolved", provider: provider.name, type: event.type }));
+    await provider.onUnresolved?.(event, deps.admin);
   }
   if (result.status === "accepted") deps.schedule(deps.runWorker);
 
