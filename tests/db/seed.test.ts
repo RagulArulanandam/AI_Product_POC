@@ -96,6 +96,34 @@ describe("seed script", () => {
   });
 });
 
+describe("demo activity", () => {
+  it("gives business A example conversations across states, with message threads", async () => {
+    const a = first.businesses[0];
+    const { data } = await admin.from("conversations").select("id, state").eq("business_id", a.id);
+    expect((data ?? []).length).toBeGreaterThanOrEqual(7);
+    const states = new Set((data ?? []).map((c) => c.state));
+    for (const state of ["booked", "escalated", "awaiting_reply", "in_conversation", "expired", "opted_out", "enquiry_logged"]) {
+      expect(states.has(state), state).toBe(true);
+    }
+    const { count } = await admin.from("messages").select("*", { count: "exact", head: true }).eq("business_id", a.id);
+    expect(count).toBeGreaterThan(10);
+  });
+
+  it("is added only once, however often the seed runs", async () => {
+    const a = first.businesses[0];
+    const before = await admin.from("conversations").select("*", { count: "exact", head: true }).eq("business_id", a.id);
+    await runSeed();
+    const after = await admin.from("conversations").select("*", { count: "exact", head: true }).eq("business_id", a.id);
+    expect(after.count).toBe(before.count);
+  });
+
+  it("leaves the other businesses empty", async () => {
+    const [, b, c] = first.businesses;
+    const { count } = await admin.from("conversations").select("*", { count: "exact", head: true }).in("business_id", [b.id, c.id]);
+    expect(count).toBe(0);
+  });
+});
+
 describe("assertLocalDatabase", () => {
   it("allows local addresses", () => {
     expect(() => assertLocalDatabase("http://127.0.0.1:54321")).not.toThrow();

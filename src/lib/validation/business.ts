@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { toE164 } from "@/lib/phone";
+import { businessHoursSchema } from "./hours";
 
 export function supportedTimezones(): string[] {
   return Intl.supportedValuesOf("timeZone");
@@ -24,3 +25,10 @@ export const createBusinessSchema = z.object({
 });
 
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
+
+/** Editing the business profile: the same fields as onboarding, plus opening hours. */
+export const updateBusinessSchema = createBusinessSchema.extend({
+  business_hours: businessHoursSchema,
+});
+
+export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;
