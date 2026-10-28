@@ -47,3 +47,9 @@ export function getServerEnv(): ServerEnv {
 export function getWorkerSecret(): string {
   return workerSchema.parse({ WORKER_SECRET: process.env.WORKER_SECRET }).WORKER_SECRET;
 }
+
+/** Public tunnel URL that providers call. Signatures are checked against it, never the Host header. */
+export function getPublicBaseUrl(): string {
+  return z.object({ PUBLIC_BASE_URL: z.string().url() }).parse({ PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL })
+    .PUBLIC_BASE_URL;
+}
