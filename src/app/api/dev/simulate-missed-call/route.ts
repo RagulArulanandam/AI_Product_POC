@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { isAuthorized } from "@/engine/worker-auth";
+import { guardDevEndpoint } from "@/engine/dev-guard";
 import { createWebhookDeps } from "@/engine/webhook-deps";
 import { ingestWebhookEvent } from "@/engine/webhooks";
-import { getDevEndpointsEnabled, getWorkerSecret } from "@/lib/env";
 
 const bodySchema = z.object({
   businessId: z.uuid(),
@@ -18,18 +17,8 @@ const bodySchema = z.object({
  * is true and the build is not production, and always needs the worker secret.
  */
 export async function POST(request: Request): Promise<Response> {
-  // 404 when off, so the endpoint's existence is not revealed.
-  if (!getDevEndpointsEnabled()) return new Response("Not found", { status: 404 });
-
-  let secret: string;
-  try {
-    secret = getWorkerSecret();
-  } catch {
-    return Response.json({ error: "worker_not_configured" }, { status: 500 });
-  }
-  if (!isAuthorized(request.headers.get("authorization"), secret)) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const refused = guardDevEndpoint(request);
+  if (refused) return refused;
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
