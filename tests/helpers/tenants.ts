@@ -71,6 +71,11 @@ export async function createTenant(label: string): Promise<Tenant> {
   return { label, businessId: business.id, owner };
 }
 
+/** Register a business created outside createTenant (for example through the RPC) for cleanup. */
+export function trackBusiness(id: string): void {
+  created.businesses.push(id);
+}
+
 /** Add a staff member to an existing business. */
 export async function addStaff(tenant: Tenant, label = "staff"): Promise<TestUser> {
   const staff = await createUser(`${tenant.label}-${label}`);

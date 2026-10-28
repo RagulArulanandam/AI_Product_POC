@@ -92,7 +92,7 @@ Folders are created when first used, not up front.
 Three clients in `src/lib/supabase`:
 - `server.ts`: per-request, cookie-based, runs as the signed-in user so RLS applies. Default for all pages and actions.
 - `browser.ts`: anon key, used only for auth UI.
-- `admin.ts`: service role. Server-only (`import "server-only"`). Allowed callers: `src/engine`, `src/app/api/webhooks`, `src/app/api/worker`, `src/app/api/dev`, `src/app/admin`, `scripts/`. A lint rule (restricted imports) and a test enforce the allowlist.
+- `admin.ts`: service role. Server-only (`import "server-only"`). Allowed callers: `src/engine`, `src/app/api/webhooks`, `src/app/api/worker`, `src/app/api/dev`, `src/app/admin`, `src/lib/auth/guards.ts` (the admin check), `scripts/`. A lint rule (restricted imports) and a test enforce the allowlist.
 
 ## 7. Configuration
 - `src/lib/env.ts` validates all env vars with Zod at startup and exports a typed object. Nothing else reads `process.env`.
