@@ -27,7 +27,7 @@ Terminal or side states: `enquiry_logged`, `escalated`, `opted_out`, `expired` (
 | delay_minutes | 2 |
 | first_message_template | "Hi, this is {{business_name}}. Sorry we missed your call. How can we help?" |
 | outside_hours_template | "Hi, this is {{business_name}}. We missed your call and are closed now. How can we help? We'll reply when we reopen." |
-| business_hours | per weekday open/close, business timezone |
+| business_hours | per weekday open/close, business timezone; default `null` = use the business profile hours |
 | booking_enabled | false |
 | appointment_duration_minutes | 30 |
 | buffer_minutes | 0 |
