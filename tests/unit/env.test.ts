@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getPublicEnv, getServerEnv } from "@/lib/env";
+import { getPublicEnv, getServerEnv, getWorkerSecret } from "@/lib/env";
 
 const KEYS = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
   "APP_BASE_URL",
+  "WORKER_SECRET",
 ] as const;
 
 describe("env", () => {
@@ -39,6 +40,14 @@ describe("env", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon";
     expect(getPublicEnv().NEXT_PUBLIC_SUPABASE_URL).toBe("http://127.0.0.1:54321");
+  });
+
+  it("requires a worker secret of at least 16 characters", () => {
+    expect(() => getWorkerSecret()).toThrow();
+    process.env.WORKER_SECRET = "too-short";
+    expect(() => getWorkerSecret()).toThrow();
+    process.env.WORKER_SECRET = "a-long-enough-secret";
+    expect(getWorkerSecret()).toBe("a-long-enough-secret");
   });
 
   it("requires the service role key and defaults APP_BASE_URL", () => {

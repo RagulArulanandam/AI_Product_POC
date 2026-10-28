@@ -19,6 +19,10 @@ const appSchema = z.object({
   APP_BASE_URL: z.string().url().default("http://localhost:3000"),
 });
 
+const workerSchema = z.object({
+  WORKER_SECRET: z.string().min(16, "WORKER_SECRET must be at least 16 characters"),
+});
+
 export type PublicEnv = z.infer<typeof publicSchema>;
 export type ServerEnv = z.infer<typeof supabaseServerSchema> & z.infer<typeof appSchema>;
 
@@ -37,4 +41,9 @@ export function getServerEnv(): ServerEnv {
     }),
     ...appSchema.parse({ APP_BASE_URL: process.env.APP_BASE_URL || undefined }),
   };
+}
+
+/** Shared secret that protects /api/worker (and the dev endpoints). Server-only. */
+export function getWorkerSecret(): string {
+  return workerSchema.parse({ WORKER_SECRET: process.env.WORKER_SECRET }).WORKER_SECRET;
 }
