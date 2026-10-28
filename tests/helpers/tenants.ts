@@ -64,6 +64,10 @@ export async function createTenant(label: string): Promise<Tenant> {
     .insert({ business_id: business.id, user_id: owner.id, role: "owner" });
   if (memberError) throw new Error(`createTenant membership failed: ${memberError.message}`);
 
+  // Mirrors what the create_business RPC does (migration 4).
+  const { error: subscriptionError } = await admin.from("subscriptions").insert({ business_id: business.id });
+  if (subscriptionError) throw new Error(`createTenant subscription failed: ${subscriptionError.message}`);
+
   return { label, businessId: business.id, owner };
 }
 

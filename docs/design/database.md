@@ -84,6 +84,7 @@ Notes:
 - `businesses` update is limited by column grants (section 6): tenants can change profile fields but never `status`.
 - Admin overrides (enabling a product past the subscription check) go through the service role, which bypasses RLS.
 - The service role is the only writer for engine tables; it never runs in client code.
+- Tenants cannot `upsert` into `business_products`: PostgREST upserts need UPDATE rights on the key columns (`business_id`, `product_id`), which are deliberately withheld. Services select first, then insert or update.
 
 ## 6. Grants
 - `revoke all on all tables in schema public from anon, authenticated;` then `alter default privileges ... revoke all` for future tables, so new tables are private until granted explicitly.

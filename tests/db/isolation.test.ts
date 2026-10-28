@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { serviceClient } from "../helpers/db";
-import { NO_TENANT_ACCESS_TABLES, TENANT_TABLES } from "../helpers/tenant-tables";
+import { missedCallProductId, NO_TENANT_ACCESS_TABLES, TENANT_TABLES } from "../helpers/tenant-tables";
 import { addStaff, cleanupTenants, createTenant, type TestUser, type Tenant } from "../helpers/tenants";
 
 // Acceptance criterion 1: a user of business A cannot read any row of business B.
@@ -8,13 +8,18 @@ import { addStaff, cleanupTenants, createTenant, type TestUser, type Tenant } fr
 let a: Tenant;
 let b: Tenant;
 let staffA: TestUser;
+let productId: string;
 const admin = serviceClient();
 
 beforeAll(async () => {
   a = await createTenant("iso-a");
   b = await createTenant("iso-b");
   staffA = await addStaff(a);
-  for (const spec of TENANT_TABLES) await spec.ensureRow(admin, b.businessId);
+  productId = await missedCallProductId(admin);
+  for (const spec of TENANT_TABLES) {
+    await spec.ensureRow(admin, a.businessId);
+    await spec.ensureRow(admin, b.businessId);
+  }
 });
 
 afterAll(cleanupTenants);
@@ -63,7 +68,11 @@ describe.each(TENANT_TABLES)("tenant isolation: $table", (spec) => {
       });
 
       it("cannot insert rows for B", async () => {
-        const payload = spec.crossTenantInsert({ victimBusinessId: b.businessId, attackerUserId: getUser().id });
+        const payload = spec.crossTenantInsert({
+          victimBusinessId: b.businessId,
+          attackerUserId: getUser().id,
+          productId,
+        });
         if (!payload) return;
         const before = await countRows(spec.table, spec.scopeColumn, b.businessId);
         const res = await getUser().client.from(spec.table).insert(payload).select();
@@ -73,11 +82,18 @@ describe.each(TENANT_TABLES)("tenant isolation: $table", (spec) => {
     });
   }
 
-  it("lets the owner of A read A's own rows", async () => {
-    const { data, error } = await a.owner.client.from(spec.table).select("*").eq(spec.scopeColumn, a.businessId);
-    expect(error).toBeNull();
-    expect((data ?? []).length).toBeGreaterThan(0);
-  });
+  if (spec.tenantReadable) {
+    it("lets the owner of A read A's own rows", async () => {
+      const { data, error } = await a.owner.client.from(spec.table).select("*").eq(spec.scopeColumn, a.businessId);
+      expect(error).toBeNull();
+      expect((data ?? []).length).toBeGreaterThan(0);
+    });
+  } else {
+    it("does not let the owner of A read A's own rows either", async () => {
+      const { data } = await a.owner.client.from(spec.table).select("*").eq(spec.scopeColumn, a.businessId);
+      expect(data ?? []).toHaveLength(0);
+    });
+  }
 });
 
 describe.each(NO_TENANT_ACCESS_TABLES)("platform-only table: %s", (table) => {
