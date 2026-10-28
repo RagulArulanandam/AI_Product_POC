@@ -75,7 +75,10 @@ export function MissedCallForm({
   businessName,
   profileHours,
   timezone,
+  calendarStatus = "disconnected",
 }: {
+  /** Whether Google Calendar is linked, so the booking section can say what will happen. */
+  calendarStatus?: "connected" | "disconnected" | "error";
   initial: MissedCallConfig;
   businessName: string;
   profileHours: BusinessHours;
@@ -168,9 +171,25 @@ export function MissedCallForm({
       </FormSection>
 
       <FormSection title="Appointments" description="Let the assistant take booking requests from customers.">
-        <ToggleRow title="Take appointment requests" description="For now the assistant collects the customer's name, service and preferred time and tells your team. Automatic calendar booking is coming next.">
+        <ToggleRow
+          title="Take appointment requests"
+          description={
+            calendarStatus === "connected"
+              ? "The assistant offers times that are free in your Google Calendar, and books the one the customer picks."
+              : "The assistant collects the customer's name, service and preferred time and tells your team. Connect your calendar and it will offer real times and book them for you."
+          }
+        >
           <Switch checked={draft.booking_enabled} onCheckedChange={(v) => set("booking_enabled", v)} aria-label="Take appointment requests" />
         </ToggleRow>
+        {draft.booking_enabled && calendarStatus !== "connected" ? (
+          <p className={cn("rounded-xl border p-4 text-sm", calendarStatus === "error" ? "border-destructive/25 bg-destructive/5" : "bg-muted/30 text-muted-foreground")}>
+            {calendarStatus === "error" ? "Your calendar needs reconnecting, so customers who ask to book are passed to you. " : "No calendar connected yet. "}
+            <Link href="/integrations" className="font-medium text-primary hover:underline">
+              {calendarStatus === "error" ? "Reconnect it" : "Connect Google Calendar"}
+            </Link>
+            .
+          </p>
+        ) : null}
         <div className="grid gap-6 sm:grid-cols-2">
           <Field label="Appointment length" htmlFor="duration" hint="In minutes." error={errors.appointment_duration_minutes}>
             <Input id="duration" type="number" min={5} max={240} inputMode="numeric" value={draft.appointment_duration_minutes} onChange={(e) => set("appointment_duration_minutes", e.target.value)} />

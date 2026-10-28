@@ -110,7 +110,7 @@ describe("computeSlots", () => {
 
 describe("isSlotAvailable", () => {
   const slot = { start: new Date("2026-10-29T10:00:00Z"), end: new Date("2026-10-29T10:30:00Z") };
-  const { preferredDate: _a, preferredTime: _b, count: _c, ...input } = base as SlotInput;
+  const input = { hours: base.hours, timezone: base.timezone, now: base.now, durationMinutes: base.durationMinutes, bufferMinutes: base.bufferMinutes, busy: base.busy };
 
   it("is true for a free slot inside hours", () => {
     expect(isSlotAvailable(slot, input)).toBe(true);

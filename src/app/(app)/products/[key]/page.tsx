@@ -8,6 +8,7 @@ import { parseHours } from "@/products/missed-call/hours";
 import type { MissedCallConfig } from "@/products/missed-call/config";
 import { MissedCallForm } from "@/products/missed-call/form";
 import { getProduct } from "@/products/registry";
+import { getIntegrationsOverview } from "@/services/integrations";
 import { getProductSettings } from "@/services/products";
 
 export async function generateMetadata(props: PageProps<"/products/[key]">) {
@@ -21,7 +22,7 @@ export default async function ProductSettingsPage(props: PageProps<"/products/[k
   if (!product || product.status !== "available") notFound();
 
   const { supabase, business } = await requireBusiness();
-  const settings = await getProductSettings(supabase, business.id, key);
+  const [settings, overview] = await Promise.all([getProductSettings(supabase, business.id, key), getIntegrationsOverview(supabase, business.id)]);
   if (!settings) notFound();
 
   return (
@@ -40,6 +41,7 @@ export default async function ProductSettingsPage(props: PageProps<"/products/[k
           businessName={business.name}
           profileHours={parseHours(business.business_hours)}
           timezone={business.timezone}
+          calendarStatus={overview.calendar.status}
         />
       ) : null}
     </div>

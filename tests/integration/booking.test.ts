@@ -380,6 +380,14 @@ describe("without a calendar", () => {
     expect(fakeCalendar.events).toHaveLength(0);
   });
 
+  it("treats a calendar the owner disconnected on purpose like no calendar", async () => {
+    await connectCalendar("disconnected");
+    fakeLlm.enqueue(answer());
+    await customerSays("I would like to book");
+    expect(sentTexts()).toEqual([BOOKING_PENDING_REPLY]);
+    expect((await conversation()).state).toBe("enquiry_logged");
+  });
+
   it("ignores a connected calendar when booking is switched off", async () => {
     await configure({ booking_enabled: false });
     fakeLlm.enqueue(answer());

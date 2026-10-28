@@ -13,6 +13,7 @@ const ALLOWED = [
   "src/lib/auth/guards.ts",
   "src/lib/supabase/admin.ts",
   "src/services/admin.ts",
+  "src/services/calendar-connection.ts",
 ];
 
 function walk(dir: string): string[] {

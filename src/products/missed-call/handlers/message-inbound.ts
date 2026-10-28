@@ -134,7 +134,9 @@ async function findCalendarIntegration(ctx: HandlerContext): Promise<CalendarInt
     .eq("business_id", ctx.business.id)
     .eq("provider", "google_calendar")
     .maybeSingle();
-  return data;
+  // Disconnected on purpose: the same as never connected. A broken connection ("error") still counts,
+  // so the customer is handed to a person instead of being told the team will confirm.
+  return data && data.status !== "disconnected" ? data : null;
 }
 
 /** Asks the model, retrying once when its answer is unusable. */
