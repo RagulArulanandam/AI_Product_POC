@@ -53,3 +53,25 @@ export function getPublicBaseUrl(): string {
   return z.object({ PUBLIC_BASE_URL: z.string().url() }).parse({ PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL })
     .PUBLIC_BASE_URL;
 }
+
+/** `fake` makes adapters return in-memory fakes (no vendor calls). Tests always use fakes. */
+export function getAdapterMode(): "real" | "fake" {
+  return z.enum(["real", "fake"]).default("real").parse(process.env.ADAPTER_MODE || undefined);
+}
+
+const twilioSchema = z.object({
+  TWILIO_ACCOUNT_SID: z.string().regex(/^AC[0-9a-f]{32}$/, "TWILIO_ACCOUNT_SID looks wrong"),
+  TWILIO_AUTH_TOKEN: z.string().min(16),
+  TWILIO_WHATSAPP_FROM: z.string().regex(/^whatsapp:\+[1-9]\d{6,14}$/, "Use the form whatsapp:+447..."),
+  TWILIO_VOICE_NUMBER: z.string().regex(/^\+[1-9]\d{6,14}$/, "Use E.164, e.g. +447..."),
+});
+
+/** Twilio credentials and numbers. Only needed when the messaging adapter runs in `real` mode. */
+export function getTwilioEnv() {
+  return twilioSchema.parse({
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_WHATSAPP_FROM: process.env.TWILIO_WHATSAPP_FROM,
+    TWILIO_VOICE_NUMBER: process.env.TWILIO_VOICE_NUMBER,
+  });
+}
