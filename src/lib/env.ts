@@ -121,6 +121,52 @@ export function getTwilioEnv() {
   });
 }
 
+const keySchema = z
+  .string()
+  .transform((value, ctx) => {
+    const bytes = Buffer.from(value, "base64");
+    if (bytes.length !== 32) {
+      ctx.addIssue({ code: "custom", message: "must be 32 bytes, base64 encoded (openssl rand -base64 32)" });
+      return z.NEVER;
+    }
+    return bytes;
+  });
+
+/** Key for stored secrets. ENCRYPTION_KEY_PREVIOUS lets values written with an older key still be read. */
+export function getEncryptionEnv(): { current: Buffer; previous?: Buffer } {
+  const parsed = z
+    .object({ ENCRYPTION_KEY: keySchema, ENCRYPTION_KEY_PREVIOUS: keySchema.optional() })
+    .parse({
+      ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
+      ENCRYPTION_KEY_PREVIOUS: process.env.ENCRYPTION_KEY_PREVIOUS || undefined,
+    });
+  return { current: parsed.ENCRYPTION_KEY, previous: parsed.ENCRYPTION_KEY_PREVIOUS };
+}
+
+const googleSchema = z.object({
+  GOOGLE_CLIENT_ID: z.string().min(10, "GOOGLE_CLIENT_ID looks wrong"),
+  GOOGLE_CLIENT_SECRET: z.string().min(10, "GOOGLE_CLIENT_SECRET looks wrong"),
+  GOOGLE_REDIRECT_URI: z.string().url(),
+});
+
+/** Google OAuth client. Only needed when the calendar adapter runs in `real` mode. */
+export function getGoogleEnv() {
+  return googleSchema.parse({
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+  });
+}
+
+/** Whether the Google client is configured, so the UI can say "not set up yet" instead of failing. */
+export function isGoogleConfigured(): boolean {
+  return getAdapterMode("calendar") === "fake" || googleSchema.safeParse({
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI: process.env.GOOGLE_REDIRECT_URI,
+  }).success;
+}
+
 /** Dev-only endpoints (such as simulate-missed-call) need the flag and a non-production build. */
 export function getDevEndpointsEnabled(): boolean {
   return process.env.ENABLE_DEV_ENDPOINTS === "true" && process.env.NODE_ENV !== "production";
