@@ -416,6 +416,9 @@ isOneToOne: false
                            },
 "is_member":
 { Args: { "b": string }; Returns: boolean
+                           },
+"set_forwarding_confirmed":
+{ Args: { "p_business": string,"p_confirmed": boolean }; Returns: undefined
                            }
           }
           Enums: {
