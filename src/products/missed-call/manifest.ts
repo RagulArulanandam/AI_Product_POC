@@ -1,5 +1,6 @@
 import type { ProductManifest } from "../types";
 import { missedCallConfigSchema } from "./config";
+import { missedCallHandlers } from "./handlers";
 
 export const missedCallManifest: ProductManifest = {
   key: "missed-call",
@@ -9,5 +10,5 @@ export const missedCallManifest: ProductManifest = {
   configSchema: missedCallConfigSchema,
   defaultConfig: missedCallConfigSchema.parse({}),
   handledEvents: ["call.missed", "message.inbound", "message.status"],
-  handlers: {}, // Phases 3 and 4
+  handlers: missedCallHandlers, // message.inbound is added in Phase 4
 };
