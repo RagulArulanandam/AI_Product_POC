@@ -7,6 +7,7 @@ export type BusinessSummary = {
   name: string;
   phone_e164: string;
   timezone: string;
+  business_hours: unknown;
   status: "active" | "disabled";
 };
 
@@ -25,7 +26,7 @@ export async function resolveBusinessContext(
 ): Promise<BusinessContext> {
   const { data, error } = await supabase
     .from("memberships")
-    .select("role, business:businesses(id, name, phone_e164, timezone, status)")
+    .select("role, business:businesses(id, name, phone_e164, timezone, business_hours, status)")
     .eq("user_id", userId)
     .order("created_at", { ascending: true })
     .limit(1)
