@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 2 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 3 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -19,11 +19,12 @@ Done when: docs reviewed, keys in place, nothing blocked.
 Done when: two test businesses cannot see each other's data; products listed from the registry. (Done: see tests/db/isolation.test.ts and tests/db/seed.test.ts.)
 
 ## Phase 2: Automation engine
-- [ ] Tables: customers, conversations, messages, scheduled_actions, automation_logs
-- [ ] Logging helper; event -> handler runner
-- [ ] Worker endpoint + pg_cron every minute (FOR UPDATE SKIP LOCKED), retries with backoff
-- [ ] Webhook helper: signature verify + idempotency
-Done when: a test event passes through the queue and is logged; duplicates are ignored.
+- [x] Tables: customers, opt_outs, conversations, messages, scheduled_actions, automation_logs, webhook_events
+- [x] Logging helper (redacting); event -> handler runner
+- [x] Worker endpoint + pg_cron every minute (FOR UPDATE SKIP LOCKED), retries with backoff
+- [x] Webhook helper: signature verify + idempotency
+Done when: a test event passes through the queue and is logged; duplicates are ignored. (Done: see tests/integration/webhooks.test.ts "end to end". Cron to app was also checked by hand through Docker.)
+Still to do in Phase 3: wire the helper into real routes with `after()` (it is injected in the helper, so not yet exercised in a running route) and add the Twilio signature verifier.
 
 ## Phase 3: Product 1, outbound
 - [ ] Messaging adapter + Twilio implementation

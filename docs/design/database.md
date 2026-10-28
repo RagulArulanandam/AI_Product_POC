@@ -126,9 +126,9 @@ returning *;
 
 ## 9. Cron (migration 6 and local setup)
 - `cron.schedule('worker-tick', '* * * * *', ...)` calls `net.http_post` to the worker URL with an `Authorization: Bearer <worker secret>` header.
-- The URL and secret are not in the migration. The job reads `current_setting('app.worker_url')` and `current_setting('app.worker_secret')`.
-- Local: `scripts/configure-cron.ts` (run by `npm run db:setup`) sets those database settings from `.env.local`; the URL is `http://host.docker.internal:3000/api/worker`. Re-run after `supabase db reset`.
-- Hosted (Phase 8): store the secret in Supabase Vault and the public URL in the setting.
+- The URL and secret are not in the migration. `call_worker()` reads them from Supabase Vault (`worker_url`, `worker_secret`) and does nothing if they are missing. (Custom database settings were tried first, but the local `postgres` role is not allowed to set them.)
+- Local: `scripts/configure-cron.ts` (run by `npm run db:setup`, and chained after `npm run db:reset`) writes both Vault secrets from `.env.local`; the URL is `http://host.docker.internal:3000/api/worker`. Re-run after a plain `supabase db reset`, which wipes the vault.
+- Hosted (Phase 8): create the same two Vault secrets by hand with the deployed URL.
 - One-minute cron granularity is acceptable for a 2-minute default delay.
 - Fallback: `npm run worker:poll` calls the same endpoint in a loop.
 
@@ -159,7 +159,7 @@ In `tests/db/`, against local Supabase with two tenants (A, B):
 3. Column-level grant keeps `businesses.status` admin-only.
 4. Subscription and product gating for enabling a product is enforced in RLS, not just in the service.
 5. `can_write` is the one DB place to change when staff permissions are decided.
-6. Cron secrets live in database settings (local) or Vault (hosted), never in migrations.
+6. Cron secrets live in Supabase Vault (local and hosted), never in migrations.
 
 ## 14. Open items
 - Redaction and retention for `webhook_events.payload` and `automation_logs.details`: security-privacy.md.

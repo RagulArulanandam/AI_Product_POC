@@ -359,7 +359,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "can_enable_product":
+            "call_worker":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"can_enable_product":
 { Args: { "b": string,"p": string }; Returns: boolean
                            },
 "can_write":

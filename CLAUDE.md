@@ -19,7 +19,9 @@ POC principle: build the smallest reliable version that proves the business mode
 Docker Desktop must be running for anything that touches the database.
 - `npm run dev` start the app on http://localhost:3000
 - `npm run db:start` start local Supabase (`supabase stop` to stop it)
-- `npm run db:reset` re-apply all migrations from scratch, then `npm run db:seed` for demo data
+- `npm run db:reset` re-apply all migrations from scratch and re-configure the worker cron, then `npm run db:seed` for demo data
+- `npm run db:setup` (re)write the worker URL and secret into Supabase Vault so pg_cron can call `/api/worker`
+- `npm run worker:poll` call the worker every 10 seconds (fallback for cron; add `-- --once` for a single call)
 - `npm run db:types` regenerate `src/lib/database.types.ts` after any migration (commit it)
 - `npm run lint`, `npm run typecheck`
 - `npm test` runs everything; `npm run test:unit` needs no database, `npm run test:db` needs local Supabase

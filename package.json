@@ -14,10 +14,12 @@
     "check:secrets": "tsx scripts/check-secrets.ts",
     "verify": "npm run lint && npm run typecheck && npm test && npm run check:secrets && npm run check:types",
     "db:start": "supabase start",
-    "db:reset": "supabase db reset",
+    "db:reset": "supabase db reset && tsx scripts/configure-cron.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
-    "check:types": "tsx scripts/check-types.ts"
+    "check:types": "tsx scripts/check-types.ts",
+    "db:setup": "tsx scripts/configure-cron.ts",
+    "worker:poll": "tsx scripts/worker-poll.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
