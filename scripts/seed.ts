@@ -185,6 +185,42 @@ async function seedDemoActivity(admin: Admin, businessId: string, productId: str
   }
 }
 
+/**
+ * One failed automation for business A, so the admin Failures page has something to retry.
+ * Added once (the dedupe key makes a second run a no-op).
+ */
+async function seedDemoFailure(admin: Admin, businessId: string): Promise<void> {
+  const { data: action, error } = await admin
+    .from("scheduled_actions")
+    .upsert(
+      {
+        business_id: businessId,
+        type: "send_first_message",
+        status: "failed",
+        attempts: 3,
+        last_error: "Twilio 21211: the number is not a valid phone number (demo)",
+        dedupe_key: "seed:demo-failure",
+        payload: { product_key: "missed-call" },
+      },
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(`demo failure failed: ${error.message}`);
+  if (!action) return;
+
+  const { error: logError } = await admin.from("automation_logs").insert({
+    business_id: businessId,
+    scheduled_action_id: action.id,
+    event_type: "send_first_message",
+    step: "action",
+    status: "error",
+    reason: "send_failed",
+    details: { error: "Twilio 21211: the number is not a valid phone number (demo)" },
+  });
+  if (logError) throw new Error(`demo failure log failed: ${logError.message}`);
+}
+
 export interface SeedResult {
   adminUserId: string;
   businesses: { key: string; id: string; name: string; ownerId: string }[];
@@ -261,6 +297,7 @@ export async function runSeed(): Promise<SeedResult> {
   }
 
   await seedDemoActivity(admin, a.id, product.id);
+  await seedDemoFailure(admin, a.id);
 
   // One staff member in business A.
   const staffUserId = await ensureUser(admin, SEED.staff.email);

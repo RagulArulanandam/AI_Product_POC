@@ -19,7 +19,11 @@ export const requireUser = cache(async () => {
 export async function requireBusiness() {
   const { supabase, user } = await requireUser();
   const ctx = await resolveBusinessContext(supabase, user.id);
-  if (ctx.kind === "no_business") redirect("/onboarding");
+  if (ctx.kind === "no_business") {
+    // Platform admins have no business of their own: their home is the admin panel.
+    if (await isPlatformAdmin(createAdminClient(), user.id)) redirect("/admin");
+    redirect("/onboarding");
+  }
   if (ctx.kind === "disabled") redirect("/disabled");
   return { supabase, user, business: ctx.business, role: ctx.role };
 }

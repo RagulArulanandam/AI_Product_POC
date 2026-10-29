@@ -28,7 +28,7 @@ Status: draft for review. Depends on: entities.md, database.md, architecture.md.
 
 ### Admin
 - No admin sign-up. Admins are created by the seed script or a documented SQL insert into `platform_admins`.
-- An admin logs in on the same `/login` page and opens `/admin`.
+- An admin logs in on the same `/login` page. An admin has no business, so `requireBusiness()` sends them to `/admin` instead of onboarding.
 
 ## 3. Sessions
 - `@supabase/ssr` with cookie sessions (httpOnly, SameSite=Lax, Secure in production). Tokens are never put in localStorage or read by client code.

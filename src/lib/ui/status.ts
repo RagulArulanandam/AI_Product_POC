@@ -79,3 +79,19 @@ export function intentLabel(intent: string | null | undefined): string {
   if (!intent) return "";
   return INTENTS[intent] ?? intent.replace(/_/g, " ");
 }
+
+const LOG_STATUS: Record<string, StatusDisplay> = {
+  ok: { label: "OK", tone: "success" },
+  skipped: { label: "Skipped", tone: "neutral" },
+  error: { label: "Error", tone: "danger" },
+};
+
+export function logStatus(status: string): StatusDisplay {
+  return LOG_STATUS[status] ?? { label: status, tone: "neutral" };
+}
+
+const PROVIDERS: Record<string, string> = { google_calendar: "Google Calendar", telephony: "Call forwarding" };
+
+export function integrationProviderLabel(provider: string): string {
+  return PROVIDERS[provider] ?? provider.replace(/_/g, " ");
+}

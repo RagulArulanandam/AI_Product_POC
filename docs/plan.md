@@ -1,6 +1,6 @@
 # Plan
 
-Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 7 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
+Status key: [ ] todo, [x] done. Update at the end of each slice. Current phase: 8 (Phase 0 still has open items: accounts/keys for later phases and the WhatsApp template approval).
 
 ## Phase 0: Docs and accounts
 - [x] CLAUDE.md, spec.md, plan.md, product-missed-call.md in repo
@@ -55,9 +55,9 @@ Done when: owner can configure and watch Product 1 without touching the DB.
 Done when: call -> chat -> event on the calendar, end to end.
 
 ## Phase 7: Admin panel
-- [ ] Business list, subscription status, product toggle, integration status
-- [ ] Automation logs, failed-automation view with retry, basic metrics
-Done when: admin can diagnose and retry a failed automation.
+- [x] Business list, subscription status, product toggle, integration status
+- [x] Automation logs, failed-automation view with retry, basic metrics
+Done when: admin can diagnose and retry a failed automation. (Done on 29 Oct 2026: /admin, /admin/businesses/[id] and /admin/failures; every admin change writes an `admin_action` log row. `npm run db:seed` adds one failed demo action for Bright Smile Dental to retry.)
 
 ## Phase 8: Hardening
 - [ ] Rate limiting on webhooks and signup
