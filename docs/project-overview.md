@@ -56,10 +56,11 @@ Small service businesses (dental, dermatology, beauty clinics) sign up, connect 
 | Sign-up, login, logout, tenant isolation | Verified on the hosted site |
 | Google Calendar connect and disconnect | Verified live with a real Google account (free/busy read, event create and delete) |
 | Escalation email | Verified live through Resend |
+| Missed call to WhatsApp, hosted | Verified on the hosted site on 29 Oct 2026 with a signed Twilio voice webhook (`npm run simulate:call`): call linked to the business, conversation opened, worker sent Twilio's template, message received on a phone |
 | WhatsApp delivery | Verified live with Twilio's template message and the webhook callbacks |
 | AI replies and booking by chat | Logic fully tested with a scripted model; **not run live** (no OpenAI credit) |
 | Free-text WhatsApp replies | **Blocked** by the Twilio trial sender (template only) |
-| A real forwarded missed call | **Not tried** (the trial account has no voice number) |
+| A real phone call to a Twilio number | **Not tried** (the trial account cannot receive calls on a number we control); the signed webhook above stands in for it |
 | Subscriptions and payments | Manual status only |
 
 The three blocked items are account limits, not missing code.
