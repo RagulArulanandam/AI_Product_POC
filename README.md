@@ -2,6 +2,8 @@
 
 A multi-tenant platform where small service businesses sign up, connect tools, enable AI "products" and configure them without technical help. Product 1 (Missed Call to WhatsApp Assistant) is built first; Products 2 and 3 are "coming soon" cards.
 
+New to the project? Start with [docs/project-overview.md](docs/project-overview.md) (what was built and what is left to go live) and [docs/team-setup-and-testing.md](docs/team-setup-and-testing.md) (install, run and test every feature).
+
 Scope and decisions: [docs/spec.md](docs/spec.md). Build order: [docs/plan.md](docs/plan.md). Design docs: [docs/design/](docs/design/) and [docs/testing.md](docs/testing.md).
 
 ## Status
