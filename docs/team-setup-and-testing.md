@@ -109,6 +109,14 @@ curl -X POST http://localhost:3000/api/dev/simulate-inbound-message -H "Authoriz
    ```
 4. Within about a minute the trial template arrives on that phone and the conversation appears under **Conversations**. A `403` means the token or `PUBLIC_BASE_URL` differs from the app's. The token is read from `.env.local`, never from an argument.
 
+**Repeat the hosted missed-call test (checklist).** Once only: the `phone_numbers` link above, the worker secret in Vercel and the two Vault secrets (`worker_url`, `worker_secret`, same secret as Vercel; check `select status_code from net._http_response order by created desc limit 3;` shows 200), and Missed Call switched on.
+1. The phone has joined the Twilio WhatsApp sandbox in the last 72 hours (otherwise send the join code again).
+2. Run `npm run simulate:call -- --from +44<your phone> --to <linked number> --base <hosted address>`. Expect `-> 200` and the "busy" text.
+3. **Conversations** shows a new one as "Sending soon"; the business's automation log shows `conditions_passed` and `first_message_scheduled`.
+4. After the delay plus up to a minute for the worker, the template arrives and the conversation becomes "Waiting for reply".
+5. Reply `STOP` from the phone to check the opt-out, or run the next test.
+A second call from the same number within 30 minutes is skipped as `duplicate_in_window`. To repeat sooner, delete the test conversation: `delete from public.conversations where customer_id in (select id from public.customers where phone_e164 = '+44<your phone>');`
+
 **Real WhatsApp (free but limited).** Remove `ADAPTER_MODE=fake`, set the Twilio values, start a tunnel (`cloudflared tunnel --url http://localhost:3000`), set `PUBLIC_BASE_URL` to the tunnel address and restart `npm run dev`. In the Twilio Console set the sandbox "when a message comes in" URL to `<tunnel>/api/webhooks/whatsapp` and the status callback to `<tunnel>/api/webhooks/whatsapp/status`. Join the sandbox from the test phone by sending the join code. A trial sender can only deliver Twilio's fixed template, not our wording, so you can verify delivery and inbound handling (STOP, escalation) but not free-text AI replies.
 
 ## 6. Accounts for the real services
