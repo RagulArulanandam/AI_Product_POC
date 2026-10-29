@@ -93,6 +93,22 @@ curl -X POST http://localhost:3000/api/dev/simulate-inbound-message -H "Authoriz
 ```
 (`curl` in PowerShell is a different command: use the first block there.) The step-by-step demo is in [demo-script.md](demo-script.md).
 
+**Trigger a real missed call without owning a phone number.** A trial Twilio account cannot receive calls on a number you control, so `npm run simulate:call` sends our voice webhook the same signed request Twilio would send. It exercises the real path: signature check, number-to-business lookup, missed-call flow, then the WhatsApp message.
+1. Link a number to the business (any number you pick, it only has to match `--to`). In Supabase SQL Editor (local Studio or hosted):
+   ```sql
+   insert into public.phone_numbers (business_id, e164)
+   select id, '+447460041934' from public.businesses where name = '<business name>';
+   ```
+2. Make sure Missed Call is switched on for that business (delay 0 for a quick test) and the worker is running.
+3. Send the call. `--from` is the phone that joined the Twilio WhatsApp sandbox (it receives the message); `--base` and `TWILIO_AUTH_TOKEN` must match what the target app uses:
+   ```bash
+   # against the hosted app (put its TWILIO_AUTH_TOKEN and PUBLIC_BASE_URL in .env.local or the environment first)
+   npm run simulate:call -- --from +44<your phone> --to +447460041934 --base https://ai-product-poc.vercel.app
+   # against your local app (signs for PUBLIC_BASE_URL but posts to localhost)
+   npm run simulate:call -- --from +44<your phone> --to +447460041934 --post-to http://localhost:3000
+   ```
+4. Within about a minute the trial template arrives on that phone and the conversation appears under **Conversations**. A `403` means the token or `PUBLIC_BASE_URL` differs from the app's. The token is read from `.env.local`, never from an argument.
+
 **Real WhatsApp (free but limited).** Remove `ADAPTER_MODE=fake`, set the Twilio values, start a tunnel (`cloudflared tunnel --url http://localhost:3000`), set `PUBLIC_BASE_URL` to the tunnel address and restart `npm run dev`. In the Twilio Console set the sandbox "when a message comes in" URL to `<tunnel>/api/webhooks/whatsapp` and the status callback to `<tunnel>/api/webhooks/whatsapp/status`. Join the sandbox from the test phone by sending the join code. A trial sender can only deliver Twilio's fixed template, not our wording, so you can verify delivery and inbound handling (STOP, escalation) but not free-text AI replies.
 
 ## 6. Accounts for the real services

@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// These walk the whole source tree, which can take longer than the default 5 seconds when the full suite is busy.
+vi.setConfig({ testTimeout: 30_000 });
 
 // architecture.md section 6 / security-privacy.md section 5: the service-role client may only
 // be imported from these places.

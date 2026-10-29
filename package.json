@@ -20,7 +20,8 @@
     "check:types": "tsx scripts/check-types.ts",
     "db:setup": "tsx scripts/configure-cron.ts",
     "worker:poll": "tsx scripts/worker-poll.ts",
-    "check:bundle": "tsx scripts/check-bundle.ts"
+    "check:bundle": "tsx scripts/check-bundle.ts",
+    "simulate:call": "tsx scripts/simulate-twilio-call.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

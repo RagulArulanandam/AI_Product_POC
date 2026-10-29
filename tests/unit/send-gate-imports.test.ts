@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// These walk the whole source tree, which can take longer than the default 5 seconds when the full suite is busy.
+vi.setConfig({ testTimeout: 30_000 });
 
 // security-privacy.md section 9: customer messages leave through one choke point, so opt-out,
 // send caps and the 24 hour window cannot be bypassed.
