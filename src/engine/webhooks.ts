@@ -95,6 +95,9 @@ export async function ingestWebhookEvent(
   return { status: "accepted", webhookEventId: data.id, actionId: queued.id };
 }
 
+/** Real provider events are a few kilobytes. Anything declared larger is refused before it is read. */
+export const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
+
 /** The URL the provider signed: the public base (tunnel) plus the request's path and query. */
 export function buildPublicUrl(publicBaseUrl: string, requestUrl: string): string {
   const incoming = new URL(requestUrl);
@@ -161,6 +164,11 @@ export async function handleWebhook(
   provider: WebhookProvider,
   deps: WebhookDeps,
 ): Promise<Response> {
+  if (Number(request.headers.get("content-length") ?? 0) > MAX_WEBHOOK_BODY_BYTES) {
+    console.warn(JSON.stringify({ event: "webhook_rejected", provider: provider.name, reason: "body_too_large" }));
+    return Response.json({ error: "payload_too_large" }, { status: 413 });
+  }
+
   const params = await readWebhookParams(request);
   const url = buildPublicUrl(deps.publicBaseUrl, request.url);
 

@@ -43,3 +43,39 @@ describe("worker cron job", () => {
     expect((await anonClient().rpc("call_worker")).error).not.toBeNull();
   });
 });
+
+describe("webhook payload retention", () => {
+  it("is scheduled daily", async () => {
+    const { rows } = await pg.query("select schedule, command from cron.job where jobname = 'purge-webhook-payloads'");
+    expect(rows).toEqual([{ schedule: "15 3 * * *", command: "select public.purge_webhook_payloads()" }]);
+  });
+
+  it("empties payloads older than 30 days and keeps the row, leaving newer ones alone", async () => {
+    await pg.query("begin");
+    try {
+      await pg.query(
+        `insert into public.webhook_events (provider, provider_event_id, payload, received_at) values
+           ('retention-test', 'old', '{"data":{"from":"+447700900111"}}', now() - interval '31 days'),
+           ('retention-test', 'recent', '{"data":{"from":"+447700900222"}}', now() - interval '29 days')`,
+      );
+      const { rows: purged } = await pg.query("select public.purge_webhook_payloads() as n");
+      expect(purged[0].n).toBeGreaterThanOrEqual(1);
+
+      const { rows } = await pg.query(
+        "select provider_event_id, payload from public.webhook_events where provider = 'retention-test' order by provider_event_id",
+      );
+      expect(rows).toEqual([
+        { provider_event_id: "old", payload: {} },
+        { provider_event_id: "recent", payload: { data: { from: "+447700900222" } } },
+      ]);
+    } finally {
+      await pg.query("rollback");
+    }
+  });
+
+  it("is not callable by tenants or anon", async () => {
+    const user = await createUser("retention");
+    expect((await user.client.rpc("purge_webhook_payloads")).error).not.toBeNull();
+    expect((await anonClient().rpc("purge_webhook_payloads")).error).not.toBeNull();
+  });
+});

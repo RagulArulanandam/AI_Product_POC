@@ -12,7 +12,7 @@ Phase 4 (AI conversation) is done: customer replies are answered by the model wi
 Phase 5 (customer dashboard) is done: onboarding, dashboard with metrics and set-up checklist, product cards and the Product 1 form, settings, billing status, integrations with call-forwarding steps, and conversation list and detail. `npm run db:seed` adds demo conversations for Bright Smile Dental (owner-a@poc.local) so the pages have something to show. To check a production build without disturbing `npm run dev`, build into its own folder: `NEXT_DIST_DIR=.next-build npx next build`, then `NEXT_DIST_DIR=.next-build npx next start -p 3102`.
 Phase 6 (calendar booking) is done and tested with a fake calendar and a stubbed Google: connect and disconnect Google Calendar (tokens encrypted), the assistant offers real free times, books the one the customer picks, and hands over to a person when the calendar cannot be used. It has not been tried against a real Google account yet: that needs `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `GOOGLE_REDIRECT_URI` in `.env.local` (see docs/design/integrations.md). Set `CALENDAR_ADAPTER=fake` to try Connect and booking locally without Google.
 Phase 7 (admin panel) is done: sign in as `admin@poc.local` to land on `/admin`, which lists every business with subscription, products, integration health and 30-day usage. A business page lets an admin pause or resume the business, edit the subscription by hand, switch products on or off and read the automation log. `/admin/failures` lists failed automations with a Retry button. Every admin change is logged as an `admin_action`; non-admins get a 404 on `/admin`.
-Phase 8 (hardening) is not built yet.
+Phase 8 (hardening) is done: sign-up and login rate limits, an oversized-webhook cap, 30-day webhook payload cleanup, security headers, friendly error pages, a bundle leak check (`npm run check:bundle`), a written [security review](docs/security-review.md) and a [demo script](docs/demo-script.md). Deploying to Vercel waits for a go-ahead and rotated keys (see below).
 
 ## Prerequisites
 - Node.js 24 and npm
@@ -71,6 +71,28 @@ curl -X POST http://localhost:3000/api/dev/simulate-inbound-message \
 ```
 
 Read the conversation in the `messages` table (Supabase Studio, http://127.0.0.1:54323). Try "I want to make a complaint" or "Is this safe for my condition?" to see an escalation and the owner's email.
+
+## Environment variables
+Names only are in `.env.example`; real values go in `.env.local` (never committed).
+
+| Variable | What it is for |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase address and public key (the only values the browser sees) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only key for webhooks, the worker and the admin panel |
+| `APP_BASE_URL`, `PUBLIC_BASE_URL` | The app's address, and the tunnel or production address Twilio calls |
+| `WORKER_SECRET`, `WORKER_URL` | Protects `/api/worker`; the address pg_cron calls |
+| `ENCRYPTION_KEY` (+ `ENCRYPTION_KEY_PREVIOUS` when rotating) | Encrypts Google tokens: `openssl rand -base64 32` |
+| `ADAPTER_MODE`, `MESSAGING_ADAPTER`, `LLM_ADAPTER`, `EMAIL_ADAPTER`, `CALENDAR_ADAPTER` | `real` or `fake`, overall or per service (tests always use fakes) |
+| `ENABLE_DEV_ENDPOINTS` | Turns on the simulate endpoints; ignored in production builds |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_WHATSAPP_FROM`, `TWILIO_VOICE_NUMBER`, `TWILIO_TRIAL_CONTENT_SID` | WhatsApp and voice (the last one only for trial accounts) |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | The assistant's model |
+| `RESEND_API_KEY`, `RESEND_FROM_EMAIL` | Escalation emails |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google Calendar sign-in. Local redirect: `http://localhost:3000/api/integrations/google/callback` |
+
+Google set-up: in Google Cloud Console create a project, enable the Calendar API, configure the consent screen (External, add your own Gmail as a test user), then create a Web application OAuth client with the redirect above. While the app is in Testing mode Google shows an "unverified app" screen: choose Advanced, then continue.
+
+## Deploying (not done yet)
+Run locally first. When ready: create a hosted Supabase project and apply the migrations, import the repo into Vercel, set the environment variables above in Vercel's settings (new keys, not the local ones), point the Twilio webhooks and the Google redirect URI at the Vercel address, and follow "Before deploying" in [docs/security-review.md](docs/security-review.md). `npm run check:bundle -- <build folder>` after a build confirms no secret reached the browser.
 
 ## Layout
 ```

@@ -17,8 +17,19 @@ async function setCronActive(active: boolean): Promise<void> {
   }
 }
 
+/**
+ * The job fires at the start of every minute and the dev server's worker may still be running
+ * (a first request after a recompile can take several seconds). Starting tests in that window lets
+ * it claim their actions, so wait until it has had time to finish.
+ */
+const TICK_SETTLE_SECONDS = 12;
+
 export async function setup(): Promise<void> {
   await setCronActive(false);
+  const secondsIntoMinute = new Date().getSeconds();
+  if (secondsIntoMinute < TICK_SETTLE_SECONDS) {
+    await new Promise((resolve) => setTimeout(resolve, (TICK_SETTLE_SECONDS - secondsIntoMinute) * 1000));
+  }
 }
 
 export async function teardown(): Promise<void> {

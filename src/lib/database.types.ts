@@ -417,6 +417,9 @@ isOneToOne: false
 "is_member":
 { Args: { "b": string }; Returns: boolean
                            },
+"purge_webhook_payloads":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "set_forwarding_confirmed":
 { Args: { "p_business": string,"p_confirmed": boolean }; Returns: undefined
                            }

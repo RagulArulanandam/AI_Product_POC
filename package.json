@@ -19,7 +19,8 @@
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "check:types": "tsx scripts/check-types.ts",
     "db:setup": "tsx scripts/configure-cron.ts",
-    "worker:poll": "tsx scripts/worker-poll.ts"
+    "worker:poll": "tsx scripts/worker-poll.ts",
+    "check:bundle": "tsx scripts/check-bundle.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

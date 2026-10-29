@@ -60,9 +60,9 @@ Done when: call -> chat -> event on the calendar, end to end.
 Done when: admin can diagnose and retry a failed automation. (Done on 29 Oct 2026: /admin, /admin/businesses/[id] and /admin/failures; every admin change writes an `admin_action` log row. `npm run db:seed` adds one failed demo action for Bright Smile Dental to retry.)
 
 ## Phase 8: Hardening
-- [ ] Rate limiting on webhooks and signup
-- [ ] Error states, README (setup, env vars, deploy), demo script
-- [ ] Security review: RLS, secrets, token handling
+- [x] Rate limiting on webhooks and signup (auth per-IP limit in config, 64 KB webhook body cap; webhooks otherwise rely on signatures and send caps, see security-review.md)
+- [x] Error states, README (setup, env vars, deploy), demo script
+- [x] Security review: RLS, secrets, token handling (docs/security-review.md)
 Done when: the demo runs three times in a row without DB edits.
 
 ## Later

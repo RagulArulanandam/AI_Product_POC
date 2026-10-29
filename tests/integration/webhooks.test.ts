@@ -5,6 +5,7 @@ import type { EngineDeps } from "@/engine/runner";
 import { runDueActions } from "@/engine/worker";
 import {
   handleWebhook,
+  MAX_WEBHOOK_BODY_BYTES,
   ingestWebhookEvent,
   type NormalisedEvent,
   type WebhookDeps,
@@ -197,6 +198,25 @@ describe("handleWebhook", () => {
     const res = await handleWebhook(post({ id: "x", business: tenant.businessId }, null), provider, deps());
     expect(res.status).toBe(403);
     vi.restoreAllMocks();
+  });
+
+  it("refuses an oversized body with 413 before reading it or checking anything", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const id = `big-${randomUUID()}`;
+    const big = new Request("http://localhost:3000/api/webhooks/test", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", "x-test-signature": validSignature },
+      body: new URLSearchParams({ id, business: tenant.businessId, note: "x".repeat(MAX_WEBHOOK_BODY_BYTES + 1) }).toString(),
+    });
+    // Node fills content-length for string bodies sent through fetch, but a Request does not: declare it.
+    big.headers.set("content-length", String(MAX_WEBHOOK_BODY_BYTES + 1));
+
+    const res = await handleWebhook(big, provider, deps());
+    expect(res.status).toBe(413);
+    expect(verifyCalls).toHaveLength(0);
+    expect(await counts(id)).toEqual({ events: 0, actions: 0 });
+    expect(JSON.parse(String(warn.mock.calls[0][0]))).toMatchObject({ reason: "body_too_large" });
+    warn.mockRestore();
   });
 
   it("verifies against PUBLIC_BASE_URL plus path and query, not the request host", async () => {
