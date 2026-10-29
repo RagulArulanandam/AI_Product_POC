@@ -51,7 +51,7 @@ Done when: owner can configure and watch Product 1 without touching the DB.
 - [x] Google OAuth connect/disconnect, encrypted token storage, narrow scopes
 - [x] Calendar adapter: free/busy, slot computation, re-check, create event
 - [x] Booking states and confirmation message
-- [ ] Live check against a real Google account (needs GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI; everything else is verified with the fake calendar and a stubbed Google)
+- [x] Live check against a real Google account (28-29 Oct 2026: connect, free/busy, event create and delete all worked with the narrow scopes; the full chat-to-booking flow still needs OpenAI credit)
 Done when: call -> chat -> event on the calendar, end to end.
 
 ## Phase 7: Admin panel
