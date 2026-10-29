@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -35,10 +36,12 @@ export function UserMenu({ email, role }: { email: string; role: string }) {
         <span className="hidden max-w-[10rem] truncate font-medium sm:block">{email}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel className="space-y-0.5">
-          <p className="truncate text-sm font-medium">{email}</p>
-          <p className="text-xs font-normal capitalize text-muted-foreground">{role}</p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="space-y-0.5">
+            <p className="truncate text-sm font-medium">{email}</p>
+            <p className="text-xs font-normal capitalize text-muted-foreground">{role}</p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {/* A real form keeps logout a server action; the menu item just submits it. */}
         <form ref={form} action={logoutAction} className="hidden" />
