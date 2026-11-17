@@ -65,6 +65,12 @@ Done when: admin can diagnose and retry a failed automation. (Done on 29 Oct 202
 - [x] Security review: RLS, secrets, token handling (docs/security-review.md)
 Done when: the demo runs three times in a row without DB edits.
 
+## Phase 9: n8n alerts and daily summary
+- [x] Database sends key events (missed call, escalation, booking, opt-out, any error) and a daily summary to an n8n webhook, with the address and secret in Vault (migration 20261117100000, tests/db/n8n-notifications.test.ts)
+- [ ] Workflow built in n8n Cloud and connected (docs/n8n-setup.md); not tested live yet
+Done when: a missed call, an escalation and the daily summary reach Telegram through n8n.
+Not started (see docs/n8n-hostinger-plan.md): update and cancel appointment, knowledge base, AI call summary, voice receptionist, Hostinger hosting.
+
 ## Later
 Products 2 and 3, Stripe, per-business WhatsApp senders, Outlook.
 
